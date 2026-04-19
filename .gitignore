@@ -1,0 +1,18 @@
+# --- Frontend (React/Node) ---
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# --- Backend (Golang) ---
+backend/main
+backend/main.exe
+backend/bin/
+backend/.env
+
+# --- OS generated files ---
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
