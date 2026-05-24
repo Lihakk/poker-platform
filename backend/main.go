@@ -28,16 +28,21 @@ func main() {
 		&models.UserScenarioHistory{},
 	)
 
-	database.SeedData()
-
 	if err != nil {
 		log.Fatal("❌ Failed to migrate database:", err)
 	}
 
+	database.SeedData()
+
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowOrigins: []string{
+			"http://localhost:5173",
+			"http://127.0.0.1:5173",
+			"http://localhost:5174",
+			"http://127.0.0.1:5174",
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -57,6 +62,8 @@ func main() {
 	r.GET("/api/modules", controllers.GetModules)
 	r.GET("/api/lessons/:id", controllers.GetLesson)
 	r.GET("/api/quizzes/:id", controllers.GetQuiz)
+	r.GET("/api/scenarios", controllers.GetScenarios)
+	r.GET("/api/scenarios/:id", controllers.GetScenario)
 
 	r.Run(":8080")
 }

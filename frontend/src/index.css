@@ -1,1 +1,51 @@
 @import "tailwindcss";
+
+@keyframes float-card {
+  0% {
+    transform: translateY(0) rotate(var(--rotate));
+  }
+  50% {
+    transform: translateY(-14px) rotate(calc(var(--rotate) + 2deg));
+  }
+  100% {
+    transform: translateY(0) rotate(var(--rotate));
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0.5;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes slide-up-soft {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-card-float {
+  animation: float-card 5.5s ease-in-out infinite;
+}
+
+.landing-pulse-ring {
+  animation: pulse-ring 4s ease-in-out infinite;
+}
+
+.landing-slide-up {
+  animation: slide-up-soft 700ms ease-out both;
+}
