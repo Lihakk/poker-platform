@@ -8,6 +8,11 @@ backend/main
 backend/main.exe
 backend/bin/
 backend/.env
+.env
+.env.*
+!.env.example
+.gocache/
+outputs/
 
 # --- OS generated files ---
 .DS_Store

@@ -1,152 +1,282 @@
-import { useMemo, useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import { glossaryTerms } from '../data/pokerTheory';
-
-const studyPlans = [
-  {
-    title: 'Beginner Foundation',
-    audience: 'New players',
-    steps: ['Learn position before memorizing charts.', 'Practice pot odds with simple call/fold spots.', 'Play fewer weak offsuit hands out of position.'],
-  },
-  {
-    title: 'Intermediate Decision Making',
-    audience: 'Regular learners',
-    steps: ['Estimate ranges by action, not vibes.', 'Compare call EV versus raise EV.', 'Track which villains overfold or overcall.'],
-  },
-  {
-    title: 'Advanced Pressure',
-    audience: 'Serious study',
-    steps: ['Use blockers to choose river bluffs.', 'Plan turns before betting flops.', 'Adjust for SPR, ICM pressure, and equity realization.'],
-  },
-];
-
-const rangeExamples = [
-  {
-    spot: 'UTG opens 6-max',
-    likelyRange: 'Pairs, suited broadways, strong offsuit broadways, some suited aces',
-    note: 'This range is strong because five players are still behind.',
-  },
-  {
-    spot: 'Button opens after folds',
-    likelyRange: 'Many suited hands, broadways, pairs, suited kings, connected hands',
-    note: 'Position and fold equity allow wider opens.',
-  },
-  {
-    spot: 'Big Blind defends',
-    likelyRange: 'Broad but capped: suited hands, pairs, broadways, many hands that did not 3-bet',
-    note: 'The Big Blind gets a discount but often plays out of position.',
-  },
-  {
-    spot: 'River check-raise',
-    likelyRange: 'Polar: very strong value or selected bluffs',
-    note: 'Ask which missed draws exist before bluff-catching.',
-  },
-];
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import {
+  ArrowRight,
+  BookOpen,
+  CheckCircle2,
+  Clock3,
+  Search,
+  Trash2,
+  NotebookPen,
+} from "lucide-react";
+import PageShell from "../components/PageShell";
+import { curriculum, studySources } from "../data/curriculum";
+import { glossaryTerms } from "../data/pokerTheory";
+import { useProgress, useProgressStore } from "../store/useProgressStore";
 
 export default function StrategyLibrary() {
-  const [category, setCategory] = useState('All');
-  const categories = useMemo(() => ['All', ...Array.from(new Set(glossaryTerms.map((term) => term.category)))], []);
-  const filteredTerms = useMemo(
-    () => glossaryTerms.filter((term) => category === 'All' || term.category === category),
-    [category],
+  const location = useLocation();
+  const initialTab =
+    new URLSearchParams(location.search).get("tab") ?? "Courses";
+  const [tab, setTab] = useState(
+    ["Courses", "Glossary", "Notebook"].includes(initialTab)
+      ? initialTab
+      : "Courses",
   );
+  const [query, setQuery] = useState("");
+  const [level, setLevel] = useState("All levels");
+  const progress = useProgress();
+  const removeNote = useProgressStore((state) => state.removeNote);
+  const topics = curriculum.filter(
+    (topic) =>
+      (level === "All levels" || topic.level === level) &&
+      `${topic.title} ${topic.description} ${topic.takeaway}`
+        .toLowerCase()
+        .includes(query.toLowerCase()),
+  );
+  const terms = glossaryTerms.filter((term) =>
+    `${term.term} ${term.category} ${term.definition}`
+      .toLowerCase()
+      .includes(query.toLowerCase()),
+  );
+  const notes = progress.notes.filter((note) =>
+    `${note.title} ${note.text}`.toLowerCase().includes(query.toLowerCase()),
+  );
+  const completed = curriculum.filter((topic) =>
+    progress.lessons.includes(topic.slug),
+  ).length;
+  const next = curriculum.find(
+    (topic) => !progress.lessons.includes(topic.slug),
+  );
+  const weaknesses = Object.entries(progress.concepts)
+    .filter(
+      ([, value]) => value.total >= 2 && value.correct / value.total < 0.7,
+    )
+    .sort((a, b) => a[1].correct / a[1].total - b[1].correct / b[1].total)
+    .slice(0, 3);
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-white">
-      <Sidebar />
-
-      <main className="ml-64 w-full p-10">
-        <div className="mb-8 rounded-lg border border-slate-800 bg-slate-900 p-6">
-          <p className="text-sm font-bold uppercase tracking-widest text-fuchsia-300">Strategy Library</p>
-          <h1 className="mt-2 text-4xl font-black tracking-tight">Poker Concepts, Ranges, and Glossary</h1>
-          <p className="mt-3 max-w-3xl text-slate-400">
-            Use this page as the “what does that mean?” layer. It explains the language behind the calculators and training spots.
+    <PageShell>
+      <header className="training-header">
+        <div>
+          <p className="eyebrow">Study / Your learning path</p>
+          <h1>
+            A little knowledge.
+            <br />
+            <em>A better next hand.</em>
+          </h1>
+          <p>
+            Start with the fundamentals. Build toward the decisions that cost
+            the most.
           </p>
         </div>
-
-        <div className="mb-8 grid gap-5 xl:grid-cols-3">
-          {studyPlans.map((plan) => (
-            <article key={plan.title} className="rounded-lg border border-slate-800 bg-slate-900 p-5">
-              <p className="text-xs font-bold uppercase tracking-widest text-fuchsia-300">{plan.audience}</p>
-              <h2 className="mt-2 text-2xl font-black">{plan.title}</h2>
-              <div className="mt-4 space-y-2">
-                {plan.steps.map((step, index) => (
-                  <p key={step} className="rounded-md bg-slate-950 p-3 text-sm text-slate-300">
-                    <span className="mr-2 font-black text-fuchsia-300">{index + 1}.</span>
-                    {step}
-                  </p>
-                ))}
-              </div>
-            </article>
+        <div className="study-progress">
+          <BookOpen size={24} />
+          <strong>
+            {completed}
+            <small> / {curriculum.length}</small>
+          </strong>
+          <span>lessons completed</span>
+          <div className="progress-track">
+            <span
+              style={{ width: `${(completed / curriculum.length) * 100}%` }}
+            />
+          </div>
+        </div>
+      </header>
+      <div className="study-toolbar">
+        <div
+          role="tablist"
+          aria-label="Library views"
+          className="segmented-tabs"
+        >
+          {["Courses", "Glossary", "Notebook"].map((item) => (
+            <button
+              key={item}
+              role="tab"
+              aria-selected={tab === item}
+              onClick={() => {
+                setTab(item);
+                setQuery("");
+              }}
+              className={tab === item ? "active" : ""}
+            >
+              {item}
+              {item === "Notebook" && progress.notes.length > 0 && (
+                <small>{progress.notes.length}</small>
+              )}
+            </button>
           ))}
         </div>
-
-        <div className="mb-8 grid gap-6 xl:grid-cols-[1fr_360px]">
-          <section className="rounded-lg border border-slate-800 bg-slate-900 p-6">
-            <h2 className="text-2xl font-black">Range Thinking Examples</h2>
-            <p className="mt-2 text-sm text-slate-400">
-              Ranges are built from action, position, stack depth, and player type. Start broad, then remove hands as the line becomes more specific.
-            </p>
-            <div className="mt-5 grid gap-3">
-              {rangeExamples.map((example) => (
-                <div key={example.spot} className="rounded-lg border border-slate-800 bg-slate-950 p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <h3 className="font-black text-slate-100">{example.spot}</h3>
-                    <span className="rounded-md bg-fuchsia-500/10 px-2 py-1 text-xs font-bold uppercase tracking-widest text-fuchsia-200">
-                      Range
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-slate-300">{example.likelyRange}</p>
-                  <p className="mt-2 text-sm text-slate-500">{example.note}</p>
+        <label className="search-field">
+          <Search size={17} />
+          <input
+            placeholder={
+              tab === "Courses"
+                ? "Search topics..."
+                : tab === "Glossary"
+                  ? "Find a term..."
+                  : "Search your notes..."
+            }
+            aria-label="Search library"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </label>
+        {tab === "Courses" && (
+          <select
+            aria-label="Difficulty level"
+            value={level}
+            onChange={(event) => setLevel(event.target.value)}
+          >
+            {["All levels", "Foundation", "Intermediate", "Advanced"].map(
+              (value) => (
+                <option key={value}>{value}</option>
+              ),
+            )}
+          </select>
+        )}
+      </div>
+      <div role="tabpanel" aria-label={tab}>
+        {tab === "Courses" && (
+          <>
+            {!query && level === "All levels" && next && (
+              <div className="continue-study">
+                <span className="continue-study-number">
+                  {String(curriculum.indexOf(next) + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <p className="eyebrow">Your next lesson</p>
+                  <h2>{next.title}</h2>
+                  <p>{next.description}</p>
                 </div>
-              ))}
+                <Link to={`/study/${next.slug}`} className="button-primary">
+                  {completed ? "Continue learning" : "Start learning"}
+                  <ArrowRight size={18} />
+                </Link>
+              </div>
+            )}
+            {weaknesses.length > 0 && (
+              <div className="study-focus">
+                <span>Worth another look</span>
+                {weaknesses.map(([concept, value]) => (
+                  <span key={concept}>
+                    {concept} ·{" "}
+                    {Math.round((value.correct / value.total) * 100)}%
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="course-list">
+              {topics.map((topic) => {
+                const result = progress.quizzes[`study:${topic.slug}`];
+                return (
+                  <article className="course-row" key={topic.slug}>
+                    <div className="course-number">
+                      {progress.lessons.includes(topic.slug) ? (
+                        <CheckCircle2 size={24} />
+                      ) : (
+                        String(curriculum.indexOf(topic) + 1).padStart(2, "0")
+                      )}
+                    </div>
+                    <div>
+                      <span
+                        className={`level-label level-${topic.level.toLowerCase()}`}
+                      >
+                        {topic.level}
+                      </span>
+                      <h2>
+                        <Link to={`/study/${topic.slug}`}>{topic.title}</Link>
+                      </h2>
+                      <p>{topic.description}</p>
+                      <span className="course-meta">
+                        <Clock3 size={13} />
+                        {topic.minutes} min · {topic.questions.length} questions
+                        {result &&
+                          ` · Last score ${Math.round((result.score / result.total) * 100)}%`}
+                      </span>
+                    </div>
+                    <div className="course-actions">
+                      <Link to={`/study/${topic.slug}`} className="text-link">
+                        Read lesson
+                        <ArrowRight size={16} />
+                      </Link>
+                      <Link to={`/practice-quiz/${topic.slug}`}>Take quiz</Link>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
-          </section>
-
-          <aside className="rounded-lg border border-fuchsia-500/30 bg-fuchsia-500/10 p-6">
-            <p className="text-sm font-bold uppercase tracking-widest text-fuchsia-100">Study habit</p>
-            <p className="mt-3 text-2xl font-black">Always write the reason before the answer.</p>
-            <p className="mt-3 text-sm leading-6 text-slate-300">
-              “Raise” is not a strategy. “Raise because villain overfolds, we block value, and SPR lets pressure work” is a strategy.
-            </p>
-          </aside>
-        </div>
-
-        <section className="rounded-lg border border-slate-800 bg-slate-900 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-widest text-slate-500">Glossary</p>
-              <h2 className="mt-2 text-2xl font-black">Terms with Examples</h2>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((item) => (
-                <button
-                  key={item}
-                  onClick={() => setCategory(item)}
-                  className={`rounded-md border px-3 py-2 text-sm font-bold transition ${
-                    category === item ? 'border-fuchsia-300 bg-fuchsia-500/15 text-fuchsia-100' : 'border-slate-700 bg-slate-800 text-slate-300'
-                  }`}
+            {topics.length === 0 && (
+              <p className="empty-message">No topics match this search.</p>
+            )}
+            <section className="study-references">
+              <h2>Further reading</h2>
+              {studySources.map((source) => (
+                <a
+                  key={source.url}
+                  href={source.url}
+                  target="_blank"
+                  rel="noreferrer"
                 >
-                  {item}
-                </button>
+                  {source.title}
+                  <ArrowRight size={16} />
+                </a>
               ))}
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            {filteredTerms.map((term) => (
-              <article key={term.term} className="rounded-lg border border-slate-800 bg-slate-950 p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <h3 className="text-xl font-black">{term.term}</h3>
-                  <span className="rounded-md bg-slate-800 px-2 py-1 text-xs font-bold uppercase tracking-widest text-slate-300">{term.category}</span>
-                </div>
-                <p className="mt-3 leading-6 text-slate-300">{term.definition}</p>
-                <p className="mt-3 rounded-md bg-slate-900 p-3 text-sm text-slate-400">{term.example}</p>
+            </section>
+          </>
+        )}
+        {tab === "Glossary" && (
+          <div className="glossary-list">
+            {terms.map((term) => (
+              <article key={term.term}>
+                <span className="level-label">{term.category}</span>
+                <h2>{term.term}</h2>
+                <p>{term.definition}</p>
+                <blockquote>{term.example}</blockquote>
               </article>
             ))}
+            {terms.length === 0 && (
+              <p className="empty-message">No terms match this search.</p>
+            )}
           </div>
-        </section>
-      </main>
-    </div>
+        )}
+        {tab === "Notebook" && (
+          <section className="notebook-list">
+            {notes.length === 0 && (
+              <div className="empty-message">
+                <NotebookPen size={32} />
+                <h2>Your study notes live here.</h2>
+                <p>
+                  Save a takeaway from a lesson or a completed hand from the
+                  simulator.
+                </p>
+                <Link to="/game-simulator" className="text-link">
+                  Go to the table
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+            )}
+            {notes.map((note) => (
+              <article key={note.id}>
+                <div>
+                  <span>{new Date(note.date).toLocaleDateString()}</span>
+                  <button
+                    className="icon-button"
+                    title="Delete note"
+                    aria-label={`Delete note: ${note.title}`}
+                    onClick={() => removeNote(note.id)}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+                <h2>{note.title}</h2>
+                <p>{note.text}</p>
+              </article>
+            ))}
+          </section>
+        )}
+      </div>
+    </PageShell>
   );
 }

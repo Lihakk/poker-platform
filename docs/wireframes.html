@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <title>PokerLearn naudotojo sąsajos eskizai</title>
+  <style>
+    body{margin:0;padding:24px;background:#f5f5f5;color:#333;font:15px Arial,sans-serif}
+    h1{font-size:22px;margin:0 0 22px}
+    h2{font-size:16px;margin:30px 0 8px}
+    .frame{width:1000px;height:600px;border:2px solid #777;background:#fff;overflow:hidden}
+    .top{height:56px;border-bottom:2px solid #999;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+    .line{height:12px;background:#d6d6d6;margin:14px 0}
+    .short{width:38%}.medium{width:66%}.long{width:90%}
+    .button{padding:10px 18px;border:2px solid #777;background:#eee;display:inline-block}
+    .image{border:2px dashed #999;background:#eee;display:flex;align-items:center;justify-content:center;color:#666}
+    .landing-main{height:438px;padding:26px 45px;position:relative;box-sizing:border-box}
+    .landing-main>div:first-child{position:relative;z-index:1;max-width:520px;padding-top:40px}
+    .landing-main .image{position:absolute;inset:0;height:auto;justify-content:flex-end;padding-right:35px;background:#e7e7e7}
+    .landing-main h3{font-size:28px}
+    .bottom{height:48px;border-top:2px solid #999;display:flex;align-items:center;justify-content:center}
+    .app{display:grid;grid-template-columns:210px 1fr;height:600px}
+    .sidebar{border-right:2px solid #999;background:#f1f1f1;padding:20px}
+    .sidebar p{padding:13px;border:1px solid #bbb;margin:8px 0}
+    .content{padding:24px}
+    .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:25px 0}
+    .card{height:105px;border:2px solid #aaa;padding:14px}
+    .rows{border-top:2px solid #aaa;margin-top:20px}
+    .row{height:54px;border-bottom:1px solid #bbb;display:flex;justify-content:space-between;align-items:center;padding:0 12px}
+    .field{height:36px;border:2px solid #aaa;background:#fafafa;margin:8px 0}
+    .modal{position:absolute;left:395px;top:105px;width:420px;height:330px;padding:20px;border:3px solid #777;background:#fff;box-shadow:0 0 0 2000px #0005}
+  </style>
+</head>
+<body>
+  <h1>PokerLearn sąsajos eskizai</h1>
+  <h2>1. Viešasis pradinis puslapis</h2>
+  <section id="wireframe-landing" class="frame">
+    <header class="top"><strong>POKERLEARN</strong><span>Funkcijos &nbsp;&nbsp; Pamokos &nbsp;&nbsp; Prisijungti &nbsp;&nbsp; <span class="button">Registruotis</span></span></header>
+    <main class="landing-main"><div><small>MOKYMOSI PLATFORMA</small><h3>Geresni pokerio sprendimai</h3><div class="line long"></div><div class="line medium"></div><div class="line short"></div><p><span class="button">Pradėti mokytis</span></p></div><div class="image">Pokerio stalo vaizdas / kortos</div></main>
+    <footer class="bottom">Apie platformą &nbsp;&nbsp; · &nbsp;&nbsp; Kontaktai</footer>
+  </section>
+  <h2>2. Prisijungusio naudotojo mokymosi skydelis</h2>
+  <section id="wireframe-dashboard" class="frame app">
+    <aside class="sidebar"><strong>POKERLEARN</strong><p>Skydelis</p><p>Pokerio matematika</p><p>Žaidimai</p><p>Situacijos</p><p>Atsijungti</p></aside>
+    <main class="content"><small>MOKYMOSI KELIAS</small><h3>Moduliai ir pratybos</h3><div class="cards"><div class="card">Pamokos<div class="line short"></div><strong>12</strong></div><div class="card">Testai<div class="line short"></div><strong>8</strong></div><div class="card">Situacijos<div class="line short"></div><strong>10</strong></div></div><h3>Mokymosi moduliai</h3><div class="rows"><div class="row">Pokerio pagrindai <span class="button">Atidaryti</span></div><div class="row">Banko šansai ir EV <span class="button">Atidaryti</span></div><div class="row">Blefai ir blokatoriai <span class="button">Atidaryti</span></div></div></main>
+  </section>
+  <h2>3. Turinio redaktorius ir redagavimo langas</h2>
+  <section id="wireframe-editor" class="frame app" style="position:relative">
+    <aside class="sidebar"><strong>POKERLEARN</strong><p>Skydelis</p><p>Turinio redaktorius</p><p>Atsijungti</p></aside>
+    <main class="content"><h3>Turinio redaktorius</h3><div>Moduliai &nbsp;&nbsp; Testai &nbsp;&nbsp; Klausimai <span class="button" style="float:right">Pridėti</span></div><div class="field" style="width:70%;margin-top:28px">&nbsp; Paieška</div><div class="rows"><div class="row">Pokerio pagrindai <span>Keisti &nbsp; Šalinti</span></div><div class="row">Banko šansai ir EV <span>Keisti &nbsp; Šalinti</span></div><div class="row">Blefai ir blokatoriai <span>Keisti &nbsp; Šalinti</span></div></div></main>
+    <div class="modal"><strong>Redaguoti modulį</strong><p>Pavadinimas</p><div class="field"></div><p>Aprašymas</p><div class="field" style="height:70px"></div><p>Rodoma eilė</p><div class="field" style="width:25%"></div><p style="text-align:right"><span class="button">Atšaukti</span> &nbsp; <span class="button">Išsaugoti</span></p></div>
+  </section>
+</body>
+</html>

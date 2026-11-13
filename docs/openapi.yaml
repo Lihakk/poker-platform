@@ -1,0 +1,1206 @@
+openapi: 3.0.3
+info:
+  title: PokerLearn learning content API
+  version: 1.1.0
+  description: REST API for modules, quizzes and questions. Access tokens are short lived JWTs; the refresh
+    token is rotated in an HttpOnly cookie.
+servers:
+  - url: http://localhost:8080
+    description: Local Go server
+  - url: https://pokerlearn.example.com
+    description: Replace with the deployed domain
+tags:
+  - name: Auth
+  - name: Modules
+  - name: Quizzes
+  - name: Questions
+  - name: Admin
+  - name: Learning
+  - name: System
+security:
+  - bearerAuth: []
+paths:
+  /api/register:
+    post:
+      tags:
+        - Auth
+      security: []
+      summary: Register a learner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+            example:
+              username: student1
+              email: student1@example.com
+              password: examplePassword123
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatedAccount"
+              example:
+                id: 7
+                message: Account created
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/login:
+    post:
+      tags:
+        - Auth
+      security: []
+      summary: Log in and receive an access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+            example:
+              email: student1@example.com
+              password: examplePassword123
+      responses:
+        "200":
+          description: Access JWT in JSON and refresh token in HttpOnly cookie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/refresh:
+    post:
+      tags:
+        - Auth
+      security: []
+      summary: Rotate refresh cookie and get a new access JWT
+      responses:
+        "200":
+          description: New tokens
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/logout:
+    post:
+      tags:
+        - Auth
+      security: []
+      summary: Revoke all sessions for the current refresh cookie owner
+      responses:
+        "204":
+          description: Cookie cleared; access tokens for that user invalidated
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/v1/overview:
+    get:
+      tags:
+        - Modules
+      summary: Learning dashboard assembled from module, quiz and question counts
+      responses:
+        "200":
+          description: Counts and resource links
+          content:
+            application/json:
+              example:
+                modules: 5
+                quizzes: 12
+                questions: 40
+                _links:
+                  modules: /api/v1/modules
+                  quizzes: /api/v1/quizzes
+                  questions: /api/v1/questions
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/v1/modules:
+    get:
+      tags:
+        - Modules
+      summary: List modules with pagination and title filter
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: title
+          in: query
+          schema:
+            type: string
+          example: Poker
+      responses:
+        "200":
+          description: Paginated modules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModulePage"
+              example:
+                data:
+                  - id: 1
+                    title: "Poker 101: The Basics"
+                    description: Learn hand rankings and position.
+                    display_order: 1
+                    owner_id: 0
+                pagination:
+                  page: 1
+                  limit: 20
+                  total: 5
+                _links:
+                  self: /api/v1/modules?page=1&limit=20
+                  next: /api/v1/modules?page=2&limit=20
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    post:
+      tags:
+        - Modules
+      summary: Create module (editor or admin)
+      requestBody:
+        $ref: "#/components/requestBodies/Module"
+      responses:
+        "201":
+          description: Created; Location header points to item
+          headers:
+            Location:
+              schema:
+                type: string
+              example: /api/v1/modules/8
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModuleResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/v1/modules/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags:
+        - Modules
+      summary: Read module and its lessons and quizzes
+      responses:
+        "200":
+          description: Module and links
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModuleResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    put:
+      tags:
+        - Modules
+      summary: Replace module fields (owner or admin)
+      requestBody:
+        $ref: "#/components/requestBodies/Module"
+      responses:
+        "200":
+          description: Updated module
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModuleResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    delete:
+      tags:
+        - Modules
+      summary: Delete module and child learning content (owner or admin)
+      responses:
+        "204":
+          description: Deleted without body
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/v1/quizzes:
+    get:
+      tags:
+        - Quizzes
+      summary: List quizzes
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: module_id
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: title
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated quizzes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    post:
+      tags:
+        - Quizzes
+      summary: Create quiz under owned module
+      requestBody:
+        $ref: "#/components/requestBodies/Quiz"
+      responses:
+        "201":
+          description: Created quiz
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/v1/quizzes/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags:
+        - Quizzes
+      summary: Read quiz with questions and answer options
+      responses:
+        "200":
+          description: Quiz with questions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    put:
+      tags:
+        - Quizzes
+      summary: Replace quiz fields (owner of both source and target modules or admin)
+      requestBody:
+        $ref: "#/components/requestBodies/Quiz"
+      responses:
+        "200":
+          description: Updated quiz
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    delete:
+      tags:
+        - Quizzes
+      summary: Delete quiz and questions
+      responses:
+        "204":
+          description: Deleted without body
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/v1/questions:
+    get:
+      tags:
+        - Questions
+      summary: List questions
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: quiz_id
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: module_id
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: text
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated questions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    post:
+      tags:
+        - Questions
+      summary: Create question with at least two options and exactly one correct answer
+      requestBody:
+        $ref: "#/components/requestBodies/Question"
+      responses:
+        "201":
+          description: Created question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/v1/questions/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags:
+        - Questions
+      summary: Read question with options
+      responses:
+        "200":
+          description: Question and links
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    put:
+      tags:
+        - Questions
+      summary: Replace question and options (owner or admin)
+      requestBody:
+        $ref: "#/components/requestBodies/Question"
+      responses:
+        "200":
+          description: Updated question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    delete:
+      tags:
+        - Questions
+      summary: Delete question and options
+      responses:
+        "204":
+          description: Deleted without body
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/v1/modules/{moduleId}/quizzes:
+    get:
+      tags:
+        - Quizzes
+      summary: List quizzes scoped to one module
+      parameters:
+        - $ref: "#/components/parameters/ModuleId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Scoped quiz page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/v1/quizzes/{quizId}/questions:
+    get:
+      tags:
+        - Questions
+      summary: List questions scoped to one quiz
+      parameters:
+        - $ref: "#/components/parameters/QuizId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Scoped question page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/v1/modules/{moduleId}/quizzes/{quizId}/questions:
+    get:
+      tags:
+        - Questions
+      summary: Three-level hierarchy; returns 404 if quiz does not belong to module
+      parameters:
+        - $ref: "#/components/parameters/ModuleId"
+        - $ref: "#/components/parameters/QuizId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Scoped question page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionPage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/users/{id}/role:
+    put:
+      tags:
+        - Admin
+      summary: Change learner, editor or admin role (admin only)
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - role
+              properties:
+                role:
+                  type: string
+                  enum:
+                    - learner
+                    - editor
+                    - admin
+            example:
+              role: editor
+      responses:
+        "200":
+          description: Role updated
+          content:
+            application/json:
+              example:
+                id: 7
+                role: editor
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/health:
+    get:
+      tags:
+        - System
+      security: []
+      summary: Process liveness; does not replace a database readiness check
+      responses:
+        "200":
+          description: API process is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Poker Backend is healthy!
+  /api/modules:
+    get:
+      tags:
+        - Learning
+      summary: Learning modules including lessons, quizzes and scenarios
+      responses:
+        "200":
+          description: Resource returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Module"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/lessons/{id}:
+    parameters:
+      - &a1
+        $ref: "#/components/parameters/Id"
+    get:
+      tags:
+        - Learning
+      summary: Read one lesson
+      responses:
+        "200":
+          description: Resource returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lesson"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/quizzes/{id}:
+    parameters:
+      - *a1
+    get:
+      tags:
+        - Learning
+      summary: Read quiz and answer options for learning
+      responses:
+        "200":
+          description: Resource returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Quiz"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/scenarios:
+    get:
+      tags:
+        - Learning
+      summary: List authored decision situations
+      responses:
+        "200":
+          description: Resource returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Scenario"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /api/scenarios/{id}:
+    parameters:
+      - *a1
+    get:
+      tags:
+        - Learning
+      summary: Read one authored decision situation
+      responses:
+        "200":
+          description: Resource returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scenario"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    ModuleId:
+      name: moduleId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    QuizId:
+      name: quizId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+        maximum: 1000000
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+  responses:
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: Invalid input
+    Unauthorized:
+      description: Access token missing
+      invalid or expired: null
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: Bearer token required
+    Forbidden:
+      description: Insufficient role or different owner
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: Editor role required
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: Resource not found
+    Conflict:
+      description: Username or email already in use
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: Username or email already exists
+    ServerError:
+      description: Unexpected server or database failure. Invalid client input is handled as 400, not 500.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: Database operation failed
+  requestBodies:
+    Module:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ModuleInput"
+          example:
+            title: River decisions
+            description: Practice river calls and value bets
+            display_order: 6
+    Quiz:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/QuizInput"
+          example:
+            module_id: 8
+            title: River value quiz
+    Question:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/QuestionInput"
+          example:
+            quiz_id: 12
+            text: Villain bets 50 into 100; what equity does a call need?
+            options:
+              - text: 25 percent
+                is_correct: true
+              - text: 50 percent
+                is_correct: false
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+    RegisterInput:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 2
+          maxLength: 80
+        email:
+          type: string
+          format: email
+          maxLength: 191
+        password:
+          type: string
+          minLength: 8
+          maxLength: 72
+          description: At least 8 characters and no more than 72 UTF-8 bytes (bcrypt limit)
+    CreatedAccount:
+      type: object
+      properties:
+        id:
+          type: integer
+        message:
+          type: string
+    LoginInput:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+            - learner
+            - editor
+            - admin
+    AuthResult:
+      type: object
+      properties:
+        token:
+          type: string
+          description: 15-minute HS256 access JWT
+        user:
+          $ref: "#/components/schemas/User"
+    ModuleInput:
+      type: object
+      required:
+        - title
+        - description
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 200
+        description:
+          type: string
+          minLength: 10
+          maxLength: 6000
+        display_order:
+          type: integer
+          minimum: 0
+          maximum: 1000000
+    Module:
+      allOf:
+        - $ref: "#/components/schemas/ModuleInput"
+        - type: object
+          properties:
+            id:
+              type: integer
+            owner_id:
+              type: integer
+            lessons:
+              type: array
+              items:
+                $ref: "#/components/schemas/Lesson"
+            quizzes:
+              type: array
+              items:
+                $ref: "#/components/schemas/Quiz"
+            scenarios:
+              type: array
+              items:
+                $ref: "#/components/schemas/Scenario"
+    QuizInput:
+      type: object
+      required:
+        - module_id
+        - title
+      properties:
+        module_id:
+          type: integer
+          minimum: 1
+        title:
+          type: string
+          minLength: 3
+          maxLength: 200
+    Quiz:
+      allOf:
+        - $ref: "#/components/schemas/QuizInput"
+        - type: object
+          properties:
+            id:
+              type: integer
+            questions:
+              type: array
+              items:
+                $ref: "#/components/schemas/Question"
+    Option:
+      type: object
+      properties:
+        id:
+          type: integer
+        question_id:
+          type: integer
+        text:
+          type: string
+        is_correct:
+          type: boolean
+    OptionInput:
+      type: object
+      required:
+        - text
+        - is_correct
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 200
+        is_correct:
+          type: boolean
+    QuestionInput:
+      type: object
+      required:
+        - quiz_id
+        - text
+        - options
+      properties:
+        quiz_id:
+          type: integer
+          minimum: 1
+        text:
+          type: string
+          minLength: 8
+          maxLength: 5000
+        explanation:
+          type: string
+          maxLength: 5000
+        options:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/OptionInput"
+          maxItems: 8
+          description: Distinct trimmed answers, exactly one is_correct=true
+    Question:
+      type: object
+      properties:
+        id:
+          type: integer
+        quiz_id:
+          type: integer
+        text:
+          type: string
+        explanation:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/Option"
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+    Links:
+      type: object
+      properties:
+        self:
+          type: string
+        prev:
+          type: string
+        next:
+          type: string
+        collection:
+          type: string
+    ModulePage:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Module"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+        _links:
+          $ref: "#/components/schemas/Links"
+    QuizPage:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Quiz"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+        _links:
+          $ref: "#/components/schemas/Links"
+    QuestionPage:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Question"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+        _links:
+          $ref: "#/components/schemas/Links"
+    ModuleResult:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Module"
+        _links:
+          $ref: "#/components/schemas/Links"
+    QuizResult:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Quiz"
+        _links:
+          $ref: "#/components/schemas/Links"
+    QuestionResult:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Question"
+        _links:
+          $ref: "#/components/schemas/Links"
+    Lesson:
+      type: object
+      properties:
+        id:
+          type: integer
+        module_id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+    ScenarioAction:
+      type: object
+      properties:
+        id:
+          type: integer
+        scenario_id:
+          type: integer
+        action_type:
+          type: string
+          enum:
+            - Fold
+            - Call
+            - Raise
+        raise_amount:
+          type: number
+        is_optimal:
+          type: boolean
+        coach_comment:
+          type: string
+    Scenario:
+      type: object
+      properties:
+        id:
+          type: integer
+        module_id:
+          type: integer
+        title:
+          type: string
+        hero_position:
+          type: string
+        hole_cards:
+          type: string
+          example: AsKh
+        board_cards:
+          type: string
+          example: Qc7s2h
+        pot_size:
+          type: number
+          example: 6.5
+        stack_size:
+          type: number
+        facing_bet:
+          type: number
+          description: Additional hero call cost in bb; pot_size includes the opposing wager
+        hero_street_bet:
+          type: number
+        street:
+          type: string
+        difficulty:
+          type: string
+        villain_profile:
+          type: string
+        focus:
+          type: string
+        narrative_setup:
+          type: string
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioAction"

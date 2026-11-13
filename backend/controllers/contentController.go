@@ -26,7 +26,10 @@ func GetModules(c *gin.Context) {
 	c.JSON(http.StatusOK, modules)
 }
 func GetLesson(c *gin.Context) {
-	id := c.Param("id")
+	id, ok := pathID(c, "id")
+	if !ok {
+		return
+	}
 	var lesson models.Lesson
 	if err := database.DB.First(&lesson, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Lesson not found"})
@@ -35,7 +38,10 @@ func GetLesson(c *gin.Context) {
 	c.JSON(http.StatusOK, lesson)
 }
 func GetQuiz(c *gin.Context) {
-	id := c.Param("id")
+	id, ok := pathID(c, "id")
+	if !ok {
+		return
+	}
 	var quiz models.Quiz
 	if err := database.DB.Preload("Questions.Options").First(&quiz, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Quiz not found"})
@@ -56,7 +62,10 @@ func GetScenarios(c *gin.Context) {
 }
 
 func GetScenario(c *gin.Context) {
-	id := c.Param("id")
+	id, ok := pathID(c, "id")
+	if !ok {
+		return
+	}
 	var scenario models.HoldemScenario
 
 	if err := database.DB.Preload("Actions").First(&scenario, id).Error; err != nil {

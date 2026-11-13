@@ -2,6 +2,7 @@ package database
 
 import (
 	"log"
+	"os"
 
 	"github.com/Lihakk/poker-backend/models"
 	"gorm.io/driver/mysql"
@@ -38,7 +39,10 @@ type moduleSeed struct {
 }
 
 func Connect() {
-	dsn := "poker_app:poker_app_password@tcp(127.0.0.1:3306)/poker_db?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := os.Getenv("DATABASE_DSN")
+	if dsn == "" {
+		dsn = "poker_app:poker_app_password@tcp(127.0.0.1:3306)/poker_db?charset=utf8mb4&parseTime=True&loc=Local"
+	}
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -51,6 +55,13 @@ func Connect() {
 }
 
 func SeedData() {
+	var count int64
+	if err := DB.Model(&models.Module{}).Count(&count).Error; err != nil {
+		log.Fatal(err)
+	}
+	if count > 0 {
+		return
+	}
 	seedLearningPath()
 	seedScenarios()
 }
@@ -204,7 +215,7 @@ func seedLearningPath() {
 			Quizzes: []quizSeed{
 				{
 					Title:     "Blocker Quiz",
-					Question:  "Why can holding the ace of a missed flush suit improve a river bluff?",
+					Question:  "Why can holding the ace of a completed flush suit improve a river bluff?",
 					Correct:   "It blocks villain's strongest flushes",
 					Distracts: []string{"It guarantees you have showdown value", "It means villain cannot have a pair", "It removes all missed draws"},
 					Questions: []questionSeed{

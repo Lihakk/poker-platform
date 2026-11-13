@@ -1,168 +1,521 @@
-import { useMemo, useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import { theorySections } from '../data/pokerTheory';
-import { formatEv, formatPercent } from '../lib/pokerAdvisor';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Calculator } from "lucide-react";
+import PageShell from "../components/PageShell";
+import { theorySections } from "../data/pokerTheory";
+import {
+  callEV,
+  betEV,
+  bluffBreakEven,
+  clamp,
+  requiredEquity,
+} from "../lib/pokerMath";
 
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+const modes = ["Call EV", "Bluff EV", "Draw odds", "Street sizing"];
+const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
+const ev = (value: number) => `${value >= 0 ? "+" : ""}${value.toFixed(1)} bb`;
 
 export default function PokerMath() {
+  const [mode, setMode] = useState(modes[0]);
   const [pot, setPot] = useState(75);
-  const [callAmount, setCallAmount] = useState(25);
+  const [call, setCall] = useState(25);
   const [equity, setEquity] = useState(38);
-  const [betSize, setBetSize] = useState(50);
-  const [foldFrequency, setFoldFrequency] = useState(42);
-
-  const math = useMemo(() => {
-    const safePot = Math.max(pot, 1);
-    const safeCall = Math.max(callAmount, 0);
-    const safeBet = Math.max(betSize, 1);
-    const equityPct = clamp(equity / 100, 0, 1);
-    const foldPct = clamp(foldFrequency / 100, 0, 1);
-    const finalPot = safePot + safeCall;
-    const potOdds = safeCall / Math.max(finalPot, 1);
-    const callEv = equityPct * finalPot - (1 - equityPct) * safeCall;
-    const breakEvenFold = safeBet / (safeBet + safePot);
-    const bluffEv = foldPct * safePot - (1 - foldPct) * safeBet;
-    const semiBluffEv = foldPct * safePot + (1 - foldPct) * (equityPct * (safePot + safeBet) - (1 - equityPct) * safeBet);
-
-    return { finalPot, potOdds, callEv, breakEvenFold, bluffEv, semiBluffEv };
-  }, [betSize, callAmount, equity, foldFrequency, pot]);
+  const [bet, setBet] = useState(50);
+  const [folds, setFolds] = useState(42);
+  const [outs, setOuts] = useState(9);
+  const [draw, setDraw] = useState("Flop to river (both cards)");
+  const [stack, setStack] = useState(100);
+  const [streets, setStreets] = useState(3);
+  const equityRate = equity / 100;
+  const odds = requiredEquity(pot, call);
+  const callValue = callEV(pot, call, equityRate);
+  const bluffValue = betEV(pot, bet, bet, equityRate, folds / 100);
+  const pureBluff = betEV(pot, bet, bet, 0, folds / 100);
+  const unseen = draw === "Turn to river (one card)" ? 46 : 47;
+  const count = draw === "Flop to river (both cards)" ? 2 : 1;
+  const drawChance = (cleanOuts: number) =>
+    1 -
+    Array.from(
+      { length: count },
+      (_, index) => (unseen - cleanOuts - index) / (unseen - index),
+    ).reduce((product, chance) => product * chance, 1);
+  const g = (Math.pow(1 + (2 * stack) / Math.max(pot, 1), 1 / streets) - 1) / 2;
+  const sizes = Array.from({ length: streets }, (_, index) => {
+    const nextPot = pot * Math.pow(1 + 2 * g, index);
+    const remaining = stack - (nextPot - pot) / 2;
+    const size = Math.min(remaining, nextPot * g);
+    const step = {
+      index: index + 1,
+      pot: nextPot,
+      size,
+      remaining: remaining - size,
+    };
+    return step;
+  });
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-white">
-      <Sidebar />
-
-      <main className="ml-64 w-full p-10">
-        <div className="mb-8 grid gap-6 xl:grid-cols-[1fr_380px]">
-          <section className="rounded-lg border border-slate-800 bg-slate-900 p-6">
-            <p className="text-sm font-bold uppercase tracking-widest text-amber-300">Poker Math</p>
-            <h1 className="mt-2 text-4xl font-black tracking-tight">EV, Odds, Equity, and Pressure</h1>
-            <p className="mt-3 max-w-3xl text-slate-400">
-              Poker math is not about becoming a calculator at the table. It is about knowing which decisions print money, which ones are close,
-              and which ones only feel good because the last result went your way.
-            </p>
-          </section>
-
-          <aside className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-6">
-            <p className="text-sm font-bold uppercase tracking-widest text-amber-100">Core idea</p>
-            <p className="mt-3 text-2xl font-black">A decision can lose today and still be correct.</p>
-            <p className="mt-3 text-sm leading-6 text-slate-300">
-              EV judges the decision over repetitions. Results judge only the single card runout you happened to get.
-            </p>
-          </aside>
+    <PageShell>
+      <header className="training-header">
+        <div>
+          <p className="eyebrow">Study / Math workbench</p>
+          <h1>
+            Give your intuition
+            <br />
+            <em>some numbers.</em>
+          </h1>
+          <p>
+            A decision is an estimate. Change the assumptions and watch where
+            the answer moves.
+          </p>
         </div>
-
-        <div className="mb-8 grid gap-6 xl:grid-cols-[420px_1fr]">
-          <section className="rounded-lg border border-slate-800 bg-slate-900 p-6">
-            <h2 className="text-2xl font-black">Live EV Calculator</h2>
-            <div className="mt-6 grid gap-5">
-              <NumberField label="Current pot" value={pot} onChange={setPot} min={1} max={500} suffix="bb" />
-              <NumberField label="Call amount" value={callAmount} onChange={setCallAmount} min={0} max={500} suffix="bb" />
-              <NumberField label="Your estimated equity" value={equity} onChange={setEquity} min={0} max={100} suffix="%" />
-              <NumberField label="Bet or bluff size" value={betSize} onChange={setBetSize} min={1} max={500} suffix="bb" />
-              <NumberField label="Expected folds" value={foldFrequency} onChange={setFoldFrequency} min={0} max={100} suffix="%" />
-            </div>
-          </section>
-
-          <section className="rounded-lg border border-slate-800 bg-slate-900 p-6">
-            <h2 className="text-2xl font-black">Calculated Decision Read</h2>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              <Metric label="Final pot after call" value={`${math.finalPot.toFixed(0)} bb`} tone="text-white" />
-              <Metric label="Required equity" value={formatPercent(math.potOdds)} tone="text-amber-200" />
-              <Metric label="Call EV" value={formatEv(math.callEv)} tone={math.callEv >= 0 ? 'text-emerald-300' : 'text-rose-300'} />
-              <Metric label="Break-even bluff folds" value={formatPercent(math.breakEvenFold)} tone="text-violet-200" />
-              <Metric label="Pure bluff EV" value={formatEv(math.bluffEv)} tone={math.bluffEv >= 0 ? 'text-emerald-300' : 'text-rose-300'} />
-              <Metric label="Semi-bluff EV" value={formatEv(math.semiBluffEv)} tone={math.semiBluffEv >= 0 ? 'text-emerald-300' : 'text-rose-300'} />
-            </div>
-
-            <div className="mt-6 rounded-lg border border-slate-800 bg-slate-950 p-5">
-              <p className="text-sm font-bold uppercase tracking-widest text-slate-500">Translation</p>
-              <p className="mt-2 leading-7 text-slate-200">
-                Your call needs {formatPercent(math.potOdds)} equity. With your estimate of {equity}%, the call is{' '}
-                <span className={math.callEv >= 0 ? 'font-bold text-emerald-300' : 'font-bold text-rose-300'}>
-                  {math.callEv >= 0 ? 'profitable' : 'not profitable'}
+        <Calculator size={38} className="workbench-icon" />
+      </header>
+      <div className="study-toolbar">
+        <div
+          role="tablist"
+          aria-label="Calculator modes"
+          className="segmented-tabs"
+        >
+          {modes.map((item) => (
+            <button
+              key={item}
+              role="tab"
+              aria-selected={mode === item}
+              className={mode === item ? "active" : ""}
+              onClick={() => setMode(item)}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+        <Link to="/equity-lab" className="text-link">
+          Estimate hand equity
+          <ArrowRight size={16} />
+        </Link>
+      </div>
+      <div className="math-workbench" role="tabpanel" aria-label={mode}>
+        <section className="math-inputs">
+          <p className="eyebrow">Your assumptions</p>
+          {mode !== "Draw odds" && (
+            <Numeric
+              label={
+                mode === "Call EV"
+                  ? "Current pot, including opponent bet"
+                  : "Current pot"
+              }
+              value={pot}
+              change={setPot}
+              min={1}
+              max={2000}
+            />
+          )}
+          {mode === "Call EV" && (
+            <>
+              <Numeric
+                label="Cost to call"
+                value={call}
+                change={setCall}
+                min={0}
+                max={1000}
+              />
+              <Slider
+                label="Estimated showdown equity"
+                value={equity}
+                change={setEquity}
+              />
+              <label className="math-preset">
+                Example
+                <select
+                  defaultValue=""
+                  onChange={(event) => {
+                    const values = JSON.parse(event.target.value);
+                    setPot(values[0]);
+                    setCall(values[1]);
+                    setEquity(values[2]);
+                  }}
+                >
+                  <option value="" disabled>
+                    Choose a river example
+                  </option>
+                  <option value="[75,25,30]">Half-pot bet · 30% equity</option>
+                  <option value="[200,100,25]">
+                    Pot-size bet · 25% equity
+                  </option>
+                  <option value="[300,200,45]">
+                    Double-pot bet · 45% equity
+                  </option>
+                </select>
+              </label>
+            </>
+          )}
+          {mode === "Bluff EV" && (
+            <>
+              <Numeric
+                label="Bet size"
+                value={bet}
+                change={setBet}
+                min={1}
+                max={1000}
+              />
+              <Slider
+                label="Estimated opponent folds"
+                value={folds}
+                change={setFolds}
+              />
+              <Slider
+                label="Equity when called"
+                value={equity}
+                change={setEquity}
+              />
+            </>
+          )}
+          {mode === "Draw odds" && (
+            <>
+              <Numeric
+                label="Clean outs"
+                value={outs}
+                change={setOuts}
+                min={0}
+                max={20}
+                unit="cards"
+              />
+              <label className="math-preset">
+                Cards you will see
+                <select
+                  value={draw}
+                  onChange={(event) => setDraw(event.target.value)}
+                >
+                  {[
+                    "Flop to turn (one card)",
+                    "Flop to river (both cards)",
+                    "Turn to river (one card)",
+                  ].map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
+            </>
+          )}
+          {mode === "Street sizing" && (
+            <>
+              <Numeric
+                label="Effective remaining stack"
+                value={stack}
+                change={setStack}
+                min={1}
+                max={1000}
+              />
+              <label className="math-preset">
+                Betting streets remaining
+                <select
+                  value={streets}
+                  onChange={(event) => setStreets(Number(event.target.value))}
+                >
+                  {[1, 2, 3].map((value) => (
+                    <option value={value} key={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </>
+          )}
+        </section>
+        <section className="math-output" aria-live="polite">
+          <p className="eyebrow">
+            {mode === "Draw odds"
+              ? "Card probability"
+              : mode === "Street sizing"
+                ? "A pot-building plan"
+                : "Estimated result"}
+          </p>
+          {mode === "Call EV" && (
+            <>
+              <div className="math-big-result">
+                <strong className={callValue >= 0 ? "positive" : "negative"}>
+                  {ev(callValue)}
+                </strong>
+                <span>
+                  {callValue >= 0 ? "Positive" : "Negative"} incremental call EV
                 </span>
-                . A pure bluff of {betSize} bb needs folds about {formatPercent(math.breakEvenFold)} of the time.
+              </div>
+              <div className="math-stat-row">
+                <div>
+                  <span>Break-even equity</span>
+                  <strong>{percent(odds)}</strong>
+                </div>
+                <div>
+                  <span>Final pot</span>
+                  <strong>{pot + call} bb</strong>
+                </div>
+                <div>
+                  <span>Equity margin</span>
+                  <strong>{percent(equityRate - odds)}</strong>
+                </div>
+              </div>
+              <div className="formula-read">
+                <code>
+                  {percent(equityRate)} × {pot + call} − {call} ={" "}
+                  {ev(callValue)}
+                </code>
+                <p>
+                  Your return includes your own call. Subtract the full call
+                  cost once.
+                </p>
+              </div>
+              <h3>How sensitive is the decision?</h3>
+              <div className="sensitivity-bars">
+                {Array.from({ length: 7 }, (_, index) =>
+                  clamp(odds * 100 + (index - 3) * 5, 0, 100),
+                ).map((value, index) => {
+                  const result = callEV(pot, call, value / 100);
+                  return (
+                    <div key={index}>
+                      <span>{value.toFixed(0)}% equity</span>
+                      <div>
+                        <i
+                          className={result >= 0 ? "gain-bar" : "loss-bar"}
+                          style={{
+                            width: `${Math.min(100, (Math.abs(result) / Math.max(pot, call, 1)) * 200 + 2)}%`,
+                          }}
+                        />
+                      </div>
+                      <b>{ev(result)}</b>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="math-assumption">
+                Showdown model. No later bets, rake or tournament payout
+                effects. Earlier streets can realize less than raw equity.
               </p>
-            </div>
-          </section>
-        </div>
-
-        <div className="grid gap-5 xl:grid-cols-2">
-          {theorySections.map((section) => (
-            <article key={section.title} className="rounded-lg border border-slate-800 bg-slate-900 p-6">
-              <p className="text-sm font-bold uppercase tracking-widest text-slate-500">Concept</p>
-              <h2 className="mt-2 text-2xl font-black">{section.title}</h2>
-              <p className="mt-3 leading-7 text-slate-300">{section.summary}</p>
-              {section.formula && <p className="mt-4 rounded-md bg-slate-950 p-3 font-mono text-sm text-amber-200">{section.formula}</p>}
-              <p className="mt-4 text-sm leading-6 text-slate-400">{section.example}</p>
-
-              <div className="mt-5 grid gap-2">
-                {section.table.map((row) => (
-                  <div key={row.label} className="grid gap-2 rounded-md border border-slate-800 bg-slate-950 p-3 sm:grid-cols-[140px_150px_1fr]">
-                    <p className="font-bold text-slate-100">{row.label}</p>
-                    <p className="text-amber-200">{row.value}</p>
-                    <p className="text-sm text-slate-400">{row.note}</p>
+            </>
+          )}
+          {mode === "Bluff EV" && (
+            <>
+              <div className="math-big-result">
+                <strong className={bluffValue >= 0 ? "positive" : "negative"}>
+                  {ev(bluffValue)}
+                </strong>
+                <span>Bet EV with your called-equity estimate</span>
+              </div>
+              <div className="math-stat-row">
+                <div>
+                  <span>Pure-bluff EV</span>
+                  <strong>{ev(pureBluff)}</strong>
+                </div>
+                <div>
+                  <span>Pure-bluff folds needed</span>
+                  <strong>{percent(bluffBreakEven(pot, bet))}</strong>
+                </div>
+                <div>
+                  <span>Pot when called</span>
+                  <strong>{pot + bet * 2} bb</strong>
+                </div>
+              </div>
+              <div className="formula-read">
+                <code>F × pot + (1 − F) × (equity × final pot − bet)</code>
+                <p>
+                  Winning immediately and being called are different branches.
+                  The opponent contributes {bet} bb when calling.
+                </p>
+              </div>
+              <h3>Fold-rate sensitivity</h3>
+              <div className="sensitivity-bars">
+                {[10, 20, 30, 40, 50, 60, 70].map((value) => {
+                  const result = betEV(pot, bet, bet, equityRate, value / 100);
+                  return (
+                    <div key={value}>
+                      <span>{value}% folds</span>
+                      <div>
+                        <i
+                          className={result >= 0 ? "gain-bar" : "loss-bar"}
+                          style={{
+                            width: `${Math.min(100, (Math.abs(result) / Math.max(pot, bet)) * 100 + 2)}%`,
+                          }}
+                        />
+                      </div>
+                      <b>{ev(result)}</b>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="math-assumption">
+                One matching caller and no re-raise or future bets. Equity
+                should be against the calling range. A stronger continuation
+                range can reduce a larger bet’s value.
+              </p>
+            </>
+          )}
+          {mode === "Draw odds" && (
+            <>
+              <div className="math-big-result">
+                <strong>{percent(drawChance(outs))}</strong>
+                <span>Chance to hit at least one of {outs} clean outs</span>
+              </div>
+              <div className="formula-read">
+                <code>
+                  {count === 2
+                    ? `1 − (${unseen - outs}/${unseen}) × (${unseen - outs - 1}/${unseen - 1})`
+                    : `${outs} / ${unseen}`}
+                </code>
+                <p>
+                  {unseen} unseen cards · {count}{" "}
+                  {count === 1 ? "card" : "cards"} to come
+                </p>
+              </div>
+              <div className="draw-odds-table">
+                <div>
+                  <span>Draw</span>
+                  <span>Outs</span>
+                  <span>Hit probability</span>
+                </div>
+                {[
+                  { title: "Gutshot", outs: 4 },
+                  { title: "Open-ended straight", outs: 8 },
+                  { title: "Flush draw", outs: 9 },
+                  { title: "12 distinct clean outs", outs: 12 },
+                  { title: "15 distinct clean outs", outs: 15 },
+                ].map((row) => (
+                  <div key={row.outs}>
+                    <span>{row.title}</span>
+                    <span>{row.outs}</span>
+                    <strong>{percent(drawChance(row.outs))}</strong>
                   </div>
                 ))}
               </div>
-
-              <div className="mt-5">
-                <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Common mistakes</p>
-                <div className="mt-2 space-y-2">
-                  {section.mistakes.map((mistake) => (
-                    <p key={mistake} className="rounded-md bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
-                      {mistake}
-                    </p>
-                  ))}
-                </div>
+              <p className="math-assumption">
+                This is improvement probability, not full showdown equity.
+                Assumes all listed outs are clean and no known opponent cards.
+                Two-card odds require seeing both remaining cards.
+              </p>
+            </>
+          )}
+          {mode === "Street sizing" && (
+            <>
+              <div className="math-big-result">
+                <strong>{percent(g)}</strong>
+                <span>Same fraction of pot on each street</span>
               </div>
-            </article>
-          ))}
+              <div className="formula-read">
+                <code>g = ((1 + 2 × stack / pot)^(1 / streets) − 1) / 2</code>
+                <p>
+                  Starting SPR {(stack / pot).toFixed(1)} · {streets}{" "}
+                  {streets === 1 ? "street" : "streets"}
+                </p>
+              </div>
+              <div className="draw-odds-table">
+                <div>
+                  <span>Street</span>
+                  <span>Pot</span>
+                  <span>Bet</span>
+                </div>
+                {sizes.map((step) => (
+                  <div key={step.index}>
+                    <span>Bet {step.index}</span>
+                    <span>{step.pot.toFixed(1)} bb</span>
+                    <strong>{step.size.toFixed(1)} bb</strong>
+                  </div>
+                ))}
+              </div>
+              <p className="math-assumption">
+                Heads-up, one call on every street, no raises and no rake. This
+                puts the entire effective stack in; it is a planning tool, not a
+                recommendation to stack off.
+              </p>
+            </>
+          )}
+        </section>
+      </div>
+      <section className="math-concepts">
+        <div className="section-title">
+          <h2>The concepts behind the numbers</h2>
+          <Link to="/strategy-library" className="text-link">
+            Study the full lessons
+            <ArrowRight size={16} />
+          </Link>
         </div>
-      </main>
-    </div>
+        {theorySections.map((section) => (
+          <details key={section.title}>
+            <summary>
+              {section.title}
+              <span>+</span>
+            </summary>
+            <div>
+              <p>{section.summary}</p>
+              {section.formula && <code>{section.formula}</code>}
+              <p>{section.example}</p>
+              <ul>
+                {section.mistakes.map((mistake) => (
+                  <li key={mistake}>{mistake}</li>
+                ))}
+              </ul>
+            </div>
+          </details>
+        ))}
+      </section>
+    </PageShell>
   );
 }
-
-function NumberField({
+function Numeric({
   label,
   value,
-  onChange,
+  change,
   min,
   max,
-  suffix,
+  unit = "bb",
 }: {
   label: string;
   value: number;
-  onChange: (value: number) => void;
+  change: (value: number) => void;
   min: number;
   max: number;
-  suffix: string;
+  unit?: string;
 }) {
   return (
-    <label className="block">
-      <span className="text-sm font-bold text-slate-300">{label}</span>
-      <div className="mt-2 flex overflow-hidden rounded-lg border border-slate-700 bg-slate-950 focus-within:border-amber-300">
+    <label className="math-numeric">
+      <span>{label}</span>
+      <div>
         <input
           type="number"
           min={min}
           max={max}
           value={value}
-          onChange={(event) => onChange(Number(event.target.value))}
-          className="w-full bg-transparent px-4 py-3 text-white outline-none"
+          onChange={(event) =>
+            change(clamp(Number(event.target.value), min, max))
+          }
         />
-        <span className="grid w-14 place-items-center border-l border-slate-800 text-sm font-bold text-slate-500">{suffix}</span>
+        <span>{unit}</span>
       </div>
     </label>
   );
 }
-
-function Metric({ label, value, tone }: { label: string; value: string; tone: string }) {
+function Slider({
+  label,
+  value,
+  change,
+}: {
+  label: string;
+  value: number;
+  change: (value: number) => void;
+}) {
   return (
-    <div className="rounded-lg bg-slate-950 p-4">
-      <p className="text-xs font-bold uppercase tracking-widest text-slate-500">{label}</p>
-      <p className={`mt-2 text-2xl font-black ${tone}`}>{value}</p>
-    </div>
+    <label className="math-slider">
+      <span>
+        {label}
+        <strong>{value}%</strong>
+      </span>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={value}
+        onChange={(event) => change(Number(event.target.value))}
+      />
+      <small>
+        <span>0%</span>
+        <span>100%</span>
+      </small>
+    </label>
   );
 }

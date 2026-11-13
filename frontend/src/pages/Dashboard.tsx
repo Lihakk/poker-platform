@@ -1,222 +1,306 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
-import api from '../lib/axios';
-
-interface Lesson {
-  id: number;
-  title: string;
-}
-
-interface Quiz {
-  id: number;
-  title: string;
-}
-
-interface Scenario {
-  id: number;
-  title: string;
-}
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  ArrowRight,
+  BrainCircuit,
+  CheckCircle2,
+  FlaskConical,
+  Settings2,
+  Spade,
+  Target,
+} from "lucide-react";
+import PageShell from "../components/PageShell";
+import api from "../lib/axios";
+import { curriculum } from "../data/curriculum";
+import { useAuthStore } from "../store/useAuthStore";
+import { useProgress } from "../store/useProgressStore";
 
 interface Module {
   id: number;
   title: string;
   description: string;
-  lessons: Lesson[];
-  quizzes: Quiz[];
-  scenarios: Scenario[];
+  lessons: { id: number; title: string }[];
+  quizzes: { id: number; title: string }[];
 }
-
-const practiceTiles = [
+const practice = [
   {
-    title: 'Poker Math',
-    description: 'Learn EV, pot odds, equity realization, SPR, and fold equity with live calculators.',
-    to: '/poker-math',
-    accentClass: 'text-amber-300',
-    hoverClass: 'hover:border-amber-300',
+    title: "Game simulator",
+    text: "Every street. Every decision.",
+    path: "/game-simulator",
+    icon: Spade,
+    tone: "green",
   },
   {
-    title: 'Strategy Library',
-    description: 'Study ranges, blockers, tournament pressure, and key poker terms in plain language.',
-    to: '/strategy-library',
-    accentClass: 'text-fuchsia-300',
-    hoverClass: 'hover:border-fuchsia-300',
+    title: "Decision lab",
+    text: "A spot, a size, a reason.",
+    path: "/ai-games",
+    icon: BrainCircuit,
+    tone: "gold",
   },
   {
-    title: 'Custom Games',
-    description: 'Build practice tables by format, stack depth, blinds, and focus area.',
-    to: '/custom-games',
-    accentClass: 'text-cyan-400',
-    hoverClass: 'hover:border-cyan-400',
+    title: "Situation room",
+    text: "Read the line. Test your thinking.",
+    path: "/situations",
+    icon: Target,
+    tone: "red",
   },
   {
-    title: 'AI Games',
-    description: 'Play compact hands against opponent profiles with immediate coaching.',
-    to: '/ai-games',
-    accentClass: 'text-violet-400',
-    hoverClass: 'hover:border-violet-400',
-  },
-  {
-    title: 'Game Simulator',
-    description: 'Play full heads-up hands with streets, stacks, pot movement, opponent responses, and showdown.',
-    to: '/game-simulator',
-    accentClass: 'text-teal-300',
-    hoverClass: 'hover:border-teal-300',
-  },
-  {
-    title: 'Simulated Situations',
-    description: 'Solve curated spots and compare your line to the coach comment.',
-    to: '/situations',
-    accentClass: 'text-emerald-400',
-    hoverClass: 'hover:border-emerald-400',
+    title: "Equity lab",
+    text: "Your cards. Your opponent range.",
+    path: "/equity-lab",
+    icon: FlaskConical,
+    tone: "silver",
   },
 ];
-
 export default function Dashboard() {
+  const user = useAuthStore((state) => state.user);
+  const progress = useProgress();
   const [modules, setModules] = useState<Module[]>([]);
-
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [retry, setRetry] = useState(0);
   useEffect(() => {
-    api.get('/modules').then((res) => setModules(res.data));
-  }, []);
-
-  const totals = useMemo(
-    () =>
-      modules.reduce(
-        (summary, mod) => ({
-          lessons: summary.lessons + (mod.lessons?.length ?? 0),
-          quizzes: summary.quizzes + (mod.quizzes?.length ?? 0),
-          scenarios: summary.scenarios + (mod.scenarios?.length ?? 0),
-        }),
-        { lessons: 0, quizzes: 0, scenarios: 0 },
-      ),
-    [modules],
+    let stale = false;
+    api
+      .get("/modules")
+      .then(({ data }) => {
+        if (!stale) setModules(data);
+      })
+      .catch(() => {
+        if (!stale) setError(true);
+      })
+      .finally(() => {
+        if (!stale) setLoading(false);
+      });
+    return () => {
+      stale = true;
+    };
+  }, [retry]);
+  const completed = curriculum.filter((topic) =>
+    progress.lessons.includes(topic.slug),
+  ).length;
+  const next = curriculum.find(
+    (topic) => !progress.lessons.includes(topic.slug),
   );
+  const attempts = Object.values(progress.quizzes).reduce(
+    (total, result) => total + result.attempts,
+    0,
+  );
+  const conceptData = Object.entries(progress.concepts)
+    .sort((a, b) => a[1].correct / a[1].total - b[1].correct / b[1].total)
+    .slice(0, 4);
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-white">
-      <Sidebar />
-
-      <main className="ml-64 w-full p-10">
-        <div className="mb-8 grid gap-6 xl:grid-cols-[1fr_360px]">
-          <div className="rounded-lg border border-slate-800 bg-slate-900 p-6">
-            <p className="text-sm font-bold uppercase tracking-widest text-blue-400">Training Hub</p>
-            <h1 className="mt-2 text-4xl font-black uppercase tracking-tight">
-              Learning <span className="text-blue-500">Path</span>
-            </h1>
-            <p className="mt-3 max-w-2xl text-slate-400">Master Texas Hold'em with lessons, quizzes, custom games, AI hands, coached situations, and estimated-value recommendations.</p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-md bg-slate-950 p-4">
-                <p className="text-xs uppercase tracking-widest text-slate-500">Lessons</p>
-                <p className="mt-1 text-2xl font-black">{totals.lessons}</p>
-              </div>
-              <div className="rounded-md bg-slate-950 p-4">
-                <p className="text-xs uppercase tracking-widest text-slate-500">Quizzes</p>
-                <p className="mt-1 text-2xl font-black">{totals.quizzes}</p>
-              </div>
-              <div className="rounded-md bg-slate-950 p-4">
-                <p className="text-xs uppercase tracking-widest text-slate-500">Scenarios</p>
-                <p className="mt-1 text-2xl font-black">{totals.scenarios}</p>
-              </div>
-            </div>
-          </div>
-
-          <aside className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-6">
-            <p className="text-sm font-bold uppercase tracking-widest text-blue-200">Suggested session</p>
-            <div className="mt-4 space-y-3">
-              <Link to="/custom-games" className="block rounded-md border border-blue-400/20 bg-slate-950/60 p-3 text-sm font-bold text-slate-100 transition hover:border-blue-300">
-                1. Build one custom table for today's focus.
-              </Link>
-              <Link to="/ai-games" className="block rounded-md border border-violet-400/20 bg-slate-950/60 p-3 text-sm font-bold text-slate-100 transition hover:border-violet-300">
-                2. Play five AI hands against a profile override.
-              </Link>
-              <Link to="/game-simulator" className="block rounded-md border border-teal-400/20 bg-slate-950/60 p-3 text-sm font-bold text-slate-100 transition hover:border-teal-300">
-                3. Run one full hand simulation to showdown.
-              </Link>
-              <Link to="/situations" className="block rounded-md border border-emerald-400/20 bg-slate-950/60 p-3 text-sm font-bold text-slate-100 transition hover:border-emerald-300">
-                4. Review two coached situations by street.
-              </Link>
-            </div>
-          </aside>
+    <PageShell>
+      <header className="training-header">
+        <div>
+          <p className="eyebrow">Learning hub / {user?.username ?? "Player"}</p>
+          <h1>
+            Your next <em>good decision.</em>
+          </h1>
+          <p>A little study, a few hands, and a reason you can explain.</p>
         </div>
-
-        <div className="mb-10 grid gap-4 xl:grid-cols-3 2xl:grid-cols-6">
-          {practiceTiles.map((tile) => (
+        <Link to="/custom-games" className="quiet-button">
+          <Settings2 size={17} />
+          Build a practice table
+        </Link>
+      </header>
+      <div className="hub-stats">
+        <div>
+          <span>COURSE PROGRESS</span>
+          <strong>
+            {completed}
+            <small> / {curriculum.length}</small>
+          </strong>
+        </div>
+        <div>
+          <span>QUIZ ATTEMPTS</span>
+          <strong>{attempts}</strong>
+        </div>
+        <div>
+          <span>SAVED NOTES</span>
+          <strong>{progress.notes.length}</strong>
+        </div>
+        <div>
+          <span>YOUR PRACTICE TABLES</span>
+          <strong>{progress.setups?.length ?? 0}</strong>
+        </div>
+      </div>
+      <section className="hub-practice">
+        <div className="section-title">
+          <h2>Choose your practice</h2>
+          <Link to="/game-simulator" className="text-link">
+            Take a seat
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+        <div className="hub-practice-grid">
+          {practice.map((mode, index) => (
             <Link
-              key={tile.to}
-              to={tile.to}
-              className={`rounded-lg border border-slate-800 bg-slate-900 p-5 transition ${tile.hoverClass}`}
+              className={`hub-practice-item hub-tone-${mode.tone}`}
+              key={mode.path}
+              to={mode.path}
             >
-              <p className={`text-sm font-bold uppercase tracking-widest ${tile.accentClass}`}>Practice Mode</p>
-              <h2 className="mt-2 text-2xl font-black">{tile.title}</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-400">{tile.description}</p>
+              <div>
+                <span>0{index + 1}</span>
+                <ArrowRight size={18} />
+              </div>
+              <mode.icon size={32} strokeWidth={1.3} />
+              <h3>{mode.title}</h3>
+              <p>{mode.text}</p>
             </Link>
           ))}
         </div>
-
-        <div className="grid max-w-6xl gap-6 lg:grid-cols-2">
-          {modules.map((mod) => (
-            <section key={mod.id} className="rounded-lg border border-slate-800 bg-slate-900 p-6 shadow-xl shadow-black/20">
-              <div className="flex items-start justify-between gap-4">
+      </section>
+      <div className="hub-study-layout">
+        <section>
+          <div className="section-title">
+            <h2>Keep your learning moving</h2>
+            <Link to="/strategy-library" className="text-link">
+              All lessons
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+          {next ? (
+            <div className="hub-next-lesson">
+              <p className="eyebrow">Up next · {next.level}</p>
+              <h3>{next.title}</h3>
+              <p>{next.description}</p>
+              <Link className="button-primary" to={`/study/${next.slug}`}>
+                {completed ? "Continue lesson path" : "Start learning"}
+                <ArrowRight size={17} />
+              </Link>
+            </div>
+          ) : (
+            <div className="hub-next-lesson">
+              <CheckCircle2 size={28} />
+              <h3>Course completed.</h3>
+              <p>
+                Revisit the concepts that need work or put your knowledge to use
+                at the table.
+              </p>
+              <Link to="/strategy-library" className="text-link">
+                Review the course
+                <ArrowRight size={17} />
+              </Link>
+            </div>
+          )}
+          <div className="hub-tools">
+            <Link to="/poker-math">
+              <span>Poker math</span>
+              <small>EV, draws and sizing</small>
+              <ArrowRight size={16} />
+            </Link>
+            <Link to="/strategy-library?tab=Notebook">
+              <span>Your notebook</span>
+              <small>Lessons and saved hand reviews</small>
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+        </section>
+        <aside className="hub-concepts">
+          <p className="eyebrow">From your practice</p>
+          <h2>Concept check-in</h2>
+          {conceptData.length ? (
+            conceptData.map(([concept, result]) => (
+              <div className="concept-check" key={concept}>
                 <div>
-                  <h2 className="text-2xl font-black text-white">{mod.title}</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-400">{mod.description}</p>
+                  <span>{concept}</span>
+                  <strong>
+                    {Math.round((result.correct / result.total) * 100)}%
+                  </strong>
                 </div>
-                <div className="rounded-md bg-slate-950 px-3 py-2 text-right">
-                  <p className="text-xs uppercase tracking-widest text-slate-500">Items</p>
-                  <p className="font-black">{(mod.lessons?.length ?? 0) + (mod.quizzes?.length ?? 0) + (mod.scenarios?.length ?? 0)}</p>
+                <div className="progress-track">
+                  <span
+                    style={{
+                      width: `${(result.correct / result.total) * 100}%`,
+                    }}
+                  />
                 </div>
+                <small>
+                  {result.correct} correct across {result.total} answered
+                  questions
+                </small>
               </div>
-
-              <div className="mt-6 space-y-6">
-                <div>
-                  <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-500">Lessons</h3>
-                  <div className="space-y-2">
-                    {mod.lessons?.map((lesson) => (
-                      <Link
-                        key={lesson.id}
-                        to={`/lesson/${lesson.id}`}
-                        className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 p-3 font-medium text-slate-200 transition hover:border-blue-500"
-                      >
-                        <span>{lesson.title}</span>
-                        <span className="text-sm text-blue-300">Open</span>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-500">Quizzes</h3>
-                  <div className="space-y-2">
-                    {mod.quizzes?.map((quiz) => (
-                      <Link
-                        key={quiz.id}
-                        to={`/quiz/${quiz.id}`}
-                        className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 p-3 font-medium text-slate-200 transition hover:border-indigo-500"
-                      >
-                        <span>{quiz.title}</span>
-                        <span className="text-sm text-indigo-300">Start</span>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-
-                {mod.scenarios?.length > 0 && (
-                  <div>
-                    <h3 className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-500">Scenario Practice</h3>
-                    <Link
-                      to="/situations"
-                      className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 p-3 font-medium text-slate-200 transition hover:border-emerald-500"
-                    >
-                      <span>{mod.scenarios.length} coached situations</span>
-                      <span className="text-sm text-emerald-300">Train</span>
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </section>
-          ))}
+            ))
+          ) : (
+            <p className="hub-no-data">
+              Your concept results will appear after you complete a quiz or
+              review a situation.
+            </p>
+          )}
+          <p className="lab-assumption">
+            Progress is saved for this account in this browser.
+          </p>
+        </aside>
+      </div>
+      <section className="published-modules">
+        <div className="section-title">
+          <h2>Published learning modules</h2>
+          <span>{modules.length} modules</span>
         </div>
-      </main>
-    </div>
+        {loading && (
+          <p role="status" className="empty-message">
+            Loading published lessons...
+          </p>
+        )}
+        {error && (
+          <div className="empty-message" role="alert">
+            <p>
+              Published modules could not be loaded. The course library and
+              practice tools are still available.
+            </p>
+            <button
+              className="quiet-button"
+              onClick={() => {
+                setError(false);
+                setLoading(true);
+                setRetry(retry + 1);
+              }}
+            >
+              Try again
+            </button>
+          </div>
+        )}
+        {!loading && !error && !modules.length && (
+          <p className="empty-message">
+            No additional modules have been published.
+          </p>
+        )}
+        {modules.map((module) => (
+          <details key={module.id}>
+            <summary>
+              {module.title}
+              <span>
+                {module.lessons?.length ?? 0} lessons ·{" "}
+                {module.quizzes?.length ?? 0} quizzes
+              </span>
+            </summary>
+            <p>{module.description}</p>
+            <div>
+              {module.lessons?.map((lesson) => (
+                <Link to={`/lesson/${lesson.id}`} key={lesson.id}>
+                  <span>{lesson.title}</span>
+                  {progress.lessons.includes(`api:${lesson.id}`) ? (
+                    <CheckCircle2 size={17} />
+                  ) : (
+                    <ArrowRight size={17} />
+                  )}
+                </Link>
+              ))}
+              {module.quizzes?.map((quiz) => (
+                <Link key={quiz.id} to={`/quiz/${quiz.id}`}>
+                  <span>
+                    {quiz.title}
+                    <small>QUIZ</small>
+                  </span>
+                  <ArrowRight size={17} />
+                </Link>
+              ))}
+            </div>
+          </details>
+        ))}
+      </section>
+    </PageShell>
   );
 }

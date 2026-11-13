@@ -4,29 +4,29 @@ interface User {
   id: number;
   username: string;
   email: string;
+  role: 'learner' | 'editor' | 'admin';
 }
 
 interface AuthState {
   token: string | null;
   user: User | null;
+  ready: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
+  finishRestore: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  // Check local storage so the user stays logged in if they refresh the page
-  token: localStorage.getItem('token'),
-  user: JSON.parse(localStorage.getItem('user') || 'null'),
+  token: null,
+  user: null,
+  ready: false,
 
   login: (token, user) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-    set({ token, user });
+    set({ token, user, ready: true });
   },
 
   logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    set({ token: null, user: null });
+    set({ token: null, user: null, ready: true });
   },
+  finishRestore: () => set({ ready: true }),
 }));

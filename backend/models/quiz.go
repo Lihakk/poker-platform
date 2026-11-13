@@ -8,10 +8,11 @@ type Quiz struct {
 }
 
 type Question struct {
-	ID      uint     `gorm:"primaryKey" json:"id"`
-	QuizID  uint     `gorm:"not null" json:"quiz_id"`
-	Text    string   `gorm:"type:text;not null" json:"text"`
-	Options []Option `json:"options"`
+	ID          uint     `gorm:"primaryKey" json:"id"`
+	QuizID      uint     `gorm:"not null" json:"quiz_id"`
+	Text        string   `gorm:"type:text;not null" json:"text"`
+	Explanation string   `gorm:"type:text" json:"explanation"`
+	Options     []Option `json:"options"`
 }
 
 type Option struct {

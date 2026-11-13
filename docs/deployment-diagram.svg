@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <style>
+    text{font-family:Arial,Helvetica,sans-serif;fill:#111827}
+    .label{font-size:15px}.title{font-size:22px;font-weight:700}.name{font-size:19px;font-weight:700}.small{font-size:14px}
+    .node{fill:#f8fafc;stroke:#334155;stroke-width:2}.env{fill:#eff6ff;stroke:#2563eb;stroke-width:2}.artifact{fill:#fff;stroke:#64748b;stroke-width:1.5}
+    .path{stroke:#334155;stroke-width:2;fill:none}.tag{font-size:13px;fill:#475569}
+  </style>
+  <rect width="1200" height="720" fill="white"/>
+  <text x="600" y="45" text-anchor="middle" class="title">PokerLearn diegimo diagrama</text>
+  <text x="600" y="71" text-anchor="middle" class="small">Numatomas diegimas Oracle Cloud Compute VM</text>
+
+  <rect x="40" y="260" width="220" height="210" class="node"/>
+  <path d="M40 260 L50 250 H270 L260 260 Z M260 260 L270 250 V460 L260 470 Z" fill="#e2e8f0" stroke="#334155" stroke-width="2"/>
+  <text x="58" y="291" class="tag">&lt;&lt;device&gt;&gt;</text>
+  <text x="58" y="320" class="name">Naudotojo įrenginys</text>
+  <rect x="65" y="350" width="170" height="90" class="env"/>
+  <text x="78" y="375" class="tag">&lt;&lt;executionEnvironment&gt;&gt;</text>
+  <text x="78" y="404" class="label">Interneto naršyklė</text>
+  <text x="78" y="424" class="small">React UI</text>
+
+  <rect x="360" y="115" width="800" height="525" class="node"/>
+  <path d="M360 115 L370 105 H1170 L1160 115 Z M1160 115 L1170 105 V630 L1160 640 Z" fill="#e2e8f0" stroke="#334155" stroke-width="2"/>
+  <text x="380" y="145" class="tag">&lt;&lt;device&gt;&gt;</text>
+  <text x="380" y="177" class="name">Oracle Cloud Compute VM</text>
+
+  <rect x="405" y="220" width="200" height="330" class="env"/>
+  <text x="418" y="245" class="tag">&lt;&lt;executionEnvironment&gt;&gt;</text>
+  <text x="418" y="276" class="name">Caddy</text>
+  <text x="418" y="299" class="small">HTTPS / atvirkštinis</text>
+  <text x="418" y="318" class="small">tarpinis serveris</text>
+  <rect x="425" y="375" width="160" height="105" class="artifact"/>
+  <text x="438" y="401" class="tag">&lt;&lt;artifact&gt;&gt;</text>
+  <text x="438" y="426" class="label">React statiniai</text>
+  <text x="438" y="449" class="label">failai (dist/)</text>
+
+  <rect x="665" y="220" width="210" height="330" class="env"/>
+  <text x="678" y="245" class="tag">&lt;&lt;executionEnvironment&gt;&gt;</text>
+  <text x="678" y="276" class="name">Go API</text>
+  <text x="678" y="299" class="small">Gin / REST / JWT</text>
+  <rect x="687" y="375" width="165" height="105" class="artifact"/>
+  <text x="700" y="401" class="tag">&lt;&lt;artifact&gt;&gt;</text>
+  <text x="700" y="426" class="label">pokerlearn-api</text>
+  <text x="700" y="449" class="small">vykdomasis failas</text>
+
+  <rect x="935" y="220" width="190" height="330" class="env"/>
+  <text x="947" y="245" class="tag">&lt;&lt;executionEnvironment&gt;&gt;</text>
+  <text x="947" y="276" class="name">MariaDB</text>
+  <text x="947" y="299" class="small">SQL serveris</text>
+  <rect x="955" y="375" width="150" height="105" class="artifact"/>
+  <text x="968" y="401" class="tag">&lt;&lt;artifact&gt;&gt;</text>
+  <text x="968" y="426" class="label">poker_db</text>
+  <text x="968" y="449" class="small">duomenų schema</text>
+
+  <path d="M260 365 L405 365" class="path"/>
+  <text x="332" y="350" text-anchor="middle" class="small">HTTPS :443</text>
+  <path d="M605 365 L665 365" class="path"/>
+  <text x="635" y="205" text-anchor="middle" class="small">HTTP :8080</text>
+  <path d="M875 365 L935 365" class="path"/>
+  <text x="905" y="205" text-anchor="middle" class="small">TCP :3306</text>
+  <text x="760" y="604" text-anchor="middle" class="small">API ir duomenų bazė pasiekiami tik vidiniame konteinerių tinkle.</text>
+</svg>

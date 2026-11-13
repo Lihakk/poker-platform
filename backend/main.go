@@ -2,6 +2,9 @@ package main
 
 import (
 	"log"
+	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -9,13 +12,18 @@ import (
 	"github.com/Lihakk/poker-backend/controllers"
 	"github.com/Lihakk/poker-backend/database"
 	"github.com/Lihakk/poker-backend/models"
+	"github.com/Lihakk/poker-backend/utils"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	if err := utils.ValidateSecret(); err != nil {
+		log.Fatal(err)
+	}
 	database.Connect()
 	err := database.DB.AutoMigrate(
 		&models.User{},
+		&models.RefreshSession{},
 		&models.Profile{},
 		&models.Module{},
 		&models.Lesson{},
@@ -33,16 +41,33 @@ func main() {
 	}
 
 	database.SeedData()
+	if err := database.UpgradeLearningContent(); err != nil {
+		log.Fatal("Failed to upgrade learning content: ", err)
+	}
+	if email := strings.TrimSpace(os.Getenv("ADMIN_EMAIL")); email != "" {
+		result := database.DB.Model(&models.User{}).Where("email = ?", strings.ToLower(email)).Update("role", "admin")
+		if result.Error != nil {
+			log.Fatal(result.Error)
+		}
+		if result.RowsAffected == 0 {
+			log.Printf("ADMIN_EMAIL %q has no registered account yet", email)
+		}
+	}
 
 	r := gin.Default()
+	if err := r.SetTrustedProxies(nil); err != nil {
+		log.Fatal(err)
+	}
+	r.HandleMethodNotAllowed = true
+	r.NoRoute(func(c *gin.Context) { c.JSON(http.StatusNotFound, gin.H{"error": "Route not found"}) })
+	r.NoMethod(func(c *gin.Context) { c.JSON(http.StatusMethodNotAllowed, gin.H{"error": "Method not allowed"}) })
 
+	origins := []string{"http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174"}
+	if configured := os.Getenv("CORS_ORIGINS"); configured != "" {
+		origins = strings.Split(configured, ",")
+	}
 	r.Use(cors.New(cors.Config{
-		AllowOrigins: []string{
-			"http://localhost:5173",
-			"http://127.0.0.1:5173",
-			"http://localhost:5174",
-			"http://127.0.0.1:5174",
-		},
+		AllowOrigins:     origins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -50,20 +75,15 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.GET("/api/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "Poker Backend is healthy!"})
-	})
+	controllers.RegisterRoutes(r)
 
-	// Auth
-	r.POST("/api/register", controllers.Register)
-	r.POST("/api/login", controllers.Login)
-
-	// Content Routes
-	r.GET("/api/modules", controllers.GetModules)
-	r.GET("/api/lessons/:id", controllers.GetLesson)
-	r.GET("/api/quizzes/:id", controllers.GetQuiz)
-	r.GET("/api/scenarios", controllers.GetScenarios)
-	r.GET("/api/scenarios/:id", controllers.GetScenario)
-
-	r.Run(":8080")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	log.Fatal(r.Run(host + ":" + port))
 }

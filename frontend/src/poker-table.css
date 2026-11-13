@@ -1,0 +1,84 @@
+.poker-arena { position: relative; width: 100%; height: 610px; isolation: isolate; background: #191e23; border: 1px solid #353e46; border-radius: 8px; }
+.full-table-play { container: poker / inline-size; min-width: 0; }
+.arena-topline { position: absolute; left: 20px; right: 20px; top: 18px; display: flex; justify-content: space-between; gap: 12px; color: #a7b4bd; font-size: .6rem; }
+.arena-topline > span { display: flex; gap: 8px; align-items: center; }
+.arena-topline b { font-weight: 450; color: #d2dce1; margin-left: 7px; }
+.table-live-dot { width: 6px; height: 6px; background: #8fc9ae; border-radius: 50%; }
+.felt-rail { position: absolute; inset: 105px 7% 100px; border: 12px solid #323b40; border-radius: 46%; box-shadow: 0 0 0 1px #626c6e, 0 12px 24px #080b0e6b, inset 0 0 0 2px #bdc6bd3b; background: #254e41; }
+.felt-surface { position: absolute; inset: 7px; border: 1px solid #b9d4bf33; border-radius: inherit; background-color: #254e41; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='5' height='5'%3E%3Cpath d='M0 0h1v1H0zM3 3h1v1H3z' fill='%23ffffff' fill-opacity='.035'/%3E%3C/svg%3E"); }
+.felt-wordmark { position: absolute; inset: auto 0 28px; display: flex; justify-content: center; align-items: center; gap: 8px; font-size: .63rem; font-weight: 650; color: #d1e7da57; }
+.arena-seat { position: absolute; z-index: 3; width: 152px; left: var(--seat-x); top: var(--seat-y); transform: translate(-50%, -10%); border: 1px solid #65706e; border-radius: 6px; background: #20282c; padding: 10px 10px 7px; box-shadow: 0 5px 16px #080d105c; }
+.arena-seat-identity { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.arena-avatar { display: grid; place-items: center; width: 28px; height: 28px; background: #384641; border-radius: 50%; color: #adc8bc; flex-shrink: 0; }
+.arena-seat-identity > div { min-width: 0; flex: 1; }
+.arena-seat strong { font-size: .69rem; font-weight: 600; display: block; }
+.seat-profile { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .55rem; color: #abbabf; margin-top: 3px; }
+.arena-dealer { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: #f1dfab; color: #272b24; font-size: .6rem; font-weight: 750; flex-shrink: 0; }
+.arena-seat-hand { display: flex; align-items: center; gap: 4px; margin-top: 9px; min-height: 30px; }
+.arena-card-back { display: grid; place-items: center; width: 21px; height: 29px; border: 1px solid #c2d3ca; border-radius: 2px; background: repeating-linear-gradient(45deg, #405f59 0 3px, #2d4843 3px 6px); color: #c8d6cd; }
+.arena-seat-hand .playing-card { width: 23px; height: 32px; flex-basis: 23px; padding: 2px; font-size: .72rem; box-shadow: none; border-radius: 2px; }
+.arena-seat .arena-stack { display: flex; gap: 4px; align-items: baseline; margin-left: auto; font-size: .92rem; font-weight: 600; }
+.arena-stack small { color: #b4c3c7; font-size: .55rem; font-weight: 400; }
+.arena-seat > p { margin-top: 7px; font-size: .58rem; color: #d6e2e5; min-height: 15px; overflow-wrap: anywhere; }
+.arena-seat .seat-all-in { color: #f7c2c8; font-weight: 700; }
+.seat-folded { opacity: .46; }
+.seat-active { border-color: #c3e0b7; box-shadow: 0 0 0 2px #a2d5bd35; }
+.arena-wager { position: absolute; left: 50%; bottom: -25px; transform: translateX(-50%); }
+.wager-chip { display: inline-flex; align-items: center; gap: 4px; min-height: 22px; padding: 3px 8px; border: 1px solid #af9b69; background: #262f27; border-radius: 20px; color: #f0d995; font-size: .68rem; white-space: nowrap; box-shadow: 0 3px 7px #111c16; }
+.wager-chip small { font-size: .55rem; }
+.arena-board { position: absolute; z-index: 2; left: 50%; top: 49%; transform: translate(-50%, -50%); width: max-content; max-width: 100%; text-align: center; }
+.arena-pot { display: flex; align-items: center; justify-content: center; gap: 8px; color: #e2d7af; margin-bottom: 16px; }
+.arena-pot > span { font-size: .65rem; }
+.arena-pot strong { font-size: 1.6rem; line-height: 1; color: #f2ecda; font-weight: 550; }
+.arena-pot small { font-size: .65rem; color: #d8e6da; margin-left: 5px; font-weight: 400; }
+.arena-board .community-cards { display: flex; gap: 7px; padding: 0; min-height: 78px; border: 0; }
+.arena-board .playing-card, .arena-board .board-slot { width: 50px; height: 75px; flex: 0 0 50px; border-radius: 4px; }
+.arena-board .board-slot { display: grid; place-items: center; border: 1px solid #c6dcca36; background: #17372f26; color: #b3d9c322; }
+.arena-turn { display: inline-flex; align-items: center; gap: 5px; margin-top: 12px; padding: 4px 9px; color: #e2eacb; font-size: .6rem; background: #142d275c; border-radius: 3px; }
+.arena-hero { position: absolute; z-index: 4; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; border: 1px solid #71837b; padding: 12px 16px; border-radius: 6px; background: #222d2b; min-width: 280px; }
+.hero-active { border-color: #bedca8; box-shadow: 0 0 0 3px #a2d5bd1f; }
+.arena-hero-cards { display: flex; gap: 6px; }
+.arena-hero-cards .playing-card { width: 45px; height: 66px; flex-basis: 45px; font-size: 1.1rem; }
+.arena-hero-details > span { display: flex; align-items: center; gap: 8px; font-size: .65rem; color: #c6d9cf; }
+.arena-hero-details > strong { display: block; font-weight: 600; font-size: 1.3rem; line-height: 1.5; }
+.arena-hero-details small { color: #acc3b9; font-size: .6rem; margin-left: 5px; font-weight: 400; }
+.arena-hero-details p { color: #c3d1cd; font-size: .62rem; }
+.hero-wager { position: absolute; left: 50%; top: -32px; transform: translateX(-50%); }
+.table-controls { padding: 20px; background: #1d2328; border: 1px solid #3c464e; border-top: 0; border-radius: 0 0 6px 6px; }
+.table-action-buttons button { min-height: 46px; height: auto; white-space: normal; line-height: 1.35; font-weight: 650; }
+.bet-control [data-slot='slider'] { min-height: 30px; }
+.bet-control input { font-variant-numeric: tabular-nums; }
+.bet-presets button { min-height: 34px; }
+@media (max-width: 1100px) and (min-width: 768px) { .poker-arena { height: 650px; } .arena-seat { width: 132px; } .arena-avatar { display: none; } .arena-board .playing-card, .arena-board .board-slot { width: 42px; flex-basis: 42px; height: 62px; } }
+@container poker (max-width: 620px) {
+ .poker-arena { height: 510px; }
+ .poker-arena:has(.arena-seat:nth-child(4)) { height: 600px; }
+ .poker-arena:has(.arena-seat:nth-child(4)) .arena-board { top: 62%; }
+ .poker-arena:has(.arena-seat:nth-child(4)) .felt-rail { top: 235px; }
+ .arena-topline { top: 14px; left: 12px; right: 12px; font-size: .55rem; }
+ .arena-topline b { display: none; }
+ .felt-rail { inset: 166px 4% 105px; border-width: 7px; border-radius: 43%; }
+ .felt-wordmark { display: none; }
+ .arena-opponents { position: absolute; top: 48px; left: 12px; right: 12px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; z-index: 3; }
+ .arena-seat { position: relative; left: auto; top: auto; transform: none; width: auto; min-width: 0; padding: 7px; }
+ .arena-avatar, .seat-profile, .arena-card-back { display: none; }
+ .arena-seat-identity { gap: 3px; }
+ .arena-seat strong { font-size: .6rem; overflow-wrap: anywhere; }
+ .arena-dealer { width: 15px; height: 15px; font-size: .5rem; }
+ .arena-seat-hand { min-height: 19px; margin-top: 5px; flex-wrap: wrap; }
+ .arena-seat .arena-stack { margin-left: 0; font-size: .82rem; }
+ .arena-seat > p { font-size: .55rem; margin-top: 3px; min-height: 13px; }
+ .arena-wager { position: static; transform: none; margin-top: 4px; }
+ .arena-wager .wager-chip { min-height: 15px; font-size: .55rem; padding: 1px 5px; }
+ .arena-wager svg { width: 11px; }
+ .arena-board { top: 55%; }
+ .arena-board .community-cards { gap: 5px; min-height: 60px; }
+ .arena-board .playing-card, .arena-board .board-slot { width: 40px; height: 59px; flex-basis: 40px; font-size: 1.05rem; padding: 5px; }
+ .arena-pot { margin-bottom: 12px; }
+ .arena-pot strong { font-size: 1.4rem; }
+ .arena-hero { min-width: 0; width: 250px; max-width: calc(100% - 24px); padding: 10px 13px; bottom: 18px; gap: 13px; }
+ .arena-turn { margin-top: 9px; }
+ .table-controls { padding: 14px; }
+ .table-action-buttons { gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .arena-board .community-cards { animation: none; } }

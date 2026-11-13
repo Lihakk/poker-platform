@@ -1,0 +1,51 @@
+services:
+  db:
+    image: mariadb:11.8
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: poker_db
+      MARIADB_USER: poker_app
+      MARIADB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks: [internal]
+  api:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DATABASE_DSN: poker_app:${DB_PASSWORD:?Set DB_PASSWORD in .env}@tcp(db:3306)/poker_db?charset=utf8mb4&parseTime=True&loc=UTC
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      COOKIE_SECURE: "true"
+      GIN_MODE: release
+      PORT: "8080"
+      HOST: 0.0.0.0
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [internal]
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?Set SITE_ADDRESS in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [api]
+    networks: [internal]
+volumes:
+  db_data:
+  caddy_data:
+  caddy_config:
+networks:
+  internal:

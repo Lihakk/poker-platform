@@ -1,0 +1,24 @@
+:root { --background: #14181b; --foreground: #edf1f3; --card: #20262b; --primary: #a2d5bd; --radius: .375rem; --font-display: 'Newsreader Variable', Georgia, serif; }
+body, input, select, textarea, button { font-family: 'Inter Variable', sans-serif; }
+.training-header h1, .hub-next-lesson h3, .scenario-title h2, .situation-coach h2, .math-big-result > strong, .equity-percentage, .custom-preview h2, .empty-table h2, .coach-read h3, .hand-result h2, .continue-study-number, .course-number, .empty-message h2, .glossary-list h2, .lesson-takeaway p, .lesson-article h2, .quiz-score-circle strong, .quiz-outcome h2, .landing-hero h1, .landing-page h2, .ai-page-header h1, .auth-form-surface h1 { font-family: var(--font-display); }
+button:focus-visible, a:focus-visible { outline: 2px solid #a2d5bd; outline-offset: 3px; }
+[data-slot='dialog-content'] { max-height: 90svh; overflow-y: auto; border-radius: 6px; }
+[data-slot='dialog-overlay'] { background: #070b0de0; }
+[data-slot='slider-thumb'] { min-width: 20px; min-height: 20px; }
+[data-slot='dialog-content'] .table-configuration { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; padding: 4px 0 0; border: 0; margin: 0; }
+[data-slot='dialog-content'] .table-configuration > button { grid-column: 1 / -1; width: 100%; }
+[data-slot='dialog-content'] .table-configuration select, [data-slot='dialog-content'] .table-configuration input { min-width: 0; width: 100%; }
+.training-header { padding-top: .5rem; }
+.training-header h1 { font-size: 2.5rem; }
+.training-header .eyebrow { font-size: .65rem; font-weight: 650; }
+.sidebar-wordmark { font-family: 'Inter Variable', sans-serif; }
+.sidebar-account strong { overflow-wrap: anywhere; }
+.content-editor-shell { width: 100%; max-width: 1500px; }
+.editor-action { display: flex; gap: .4rem; align-items: center; }
+.editor-detail { display: grid; gap: 1rem; }
+.editor-detail dt { color: #9caeb7; font-size: .75rem; margin-bottom: .35rem; }
+.editor-detail dd { white-space: pre-wrap; overflow-wrap: anywhere; }
+.editor-insight { display: flex; gap: 1.5rem; flex-wrap: wrap; border-bottom: 1px solid #3c464e; padding: 1rem 0; margin-bottom: 1.5rem; }
+.editor-insight strong { font-size: 1.1rem; margin-right: .4rem; }
+.editor-insight span { font-size: .8rem; color: #aab8c1; }
+@media (max-width: 767px) { .training-header h1 { font-size: 2rem; } }
