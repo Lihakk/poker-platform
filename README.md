@@ -4,6 +4,8 @@
 
 **PokerLearn – pokerio mokymosi, situacijų analizės ir žaidimo simuliavimo platforma.**
 
+Kodas ir dokumentacija publikuoti [GitHub](https://github.com/Lihakk/poker-platform). JWT ir API demonstravimo eiga pateikta [lietuviškoje instrukcijoje](docs/DEMONSTRAVIMAS_LT.md). GitHub saugykla nepakeičia viešo frontend/backend diegimo; šis vis dar planuojamas Oracle VM.
+
 ## Sprendžiamo uždavinio aprašymas
 
 ### Sistemos paskirtis
