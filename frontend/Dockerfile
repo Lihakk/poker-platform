@@ -6,6 +6,7 @@ COPY . .
 RUN npm run build
 
 FROM caddy:2-alpine
+ARG CADDY_CONFIG=Caddyfile
 COPY --from=build /src/dist /srv
-COPY Caddyfile /etc/caddy/Caddyfile
+COPY ${CADDY_CONFIG} /etc/caddy/Caddyfile
 EXPOSE 80 443

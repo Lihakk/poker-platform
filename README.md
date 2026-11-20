@@ -4,7 +4,7 @@
 
 **PokerLearn – pokerio mokymosi, situacijų analizės ir žaidimo simuliavimo platforma.**
 
-Kodas ir dokumentacija publikuoti [GitHub](https://github.com/Lihakk/poker-platform). JWT ir API demonstravimo eiga pateikta [lietuviškoje instrukcijoje](docs/DEMONSTRAVIMAS_LT.md). GitHub saugykla nepakeičia viešo frontend/backend diegimo; šis vis dar planuojamas Oracle VM.
+Kodas ir dokumentacija publikuoti [GitHub](https://github.com/Lihakk/poker-platform). Veikianti versija pasiekiama [PokerLearn svetainėje](https://pokerlearn.144-24-247-126.sslip.io:5000), įdiegtoje Oracle Cloud VM. Žr. [JWT ir API demonstravimo instrukciją](docs/DEMONSTRAVIMAS_LT.md) ir [diegimo aprašą](docs/DEPLOYMENT_CHECKLIST.md).
 
 ## Sprendžiamo uždavinio aprašymas
 
@@ -87,7 +87,7 @@ Prieigos JWT galioja 15 minučių. Atnaujinimo žetonas galioja 7 dienas, naršy
 
 ## Architektūra ir diegimas
 
-Kliento pusė kreipiasi į Go API per HTTPS ir REST/JSON. API per GORM pasiekia MariaDB. **Oracle Cloud Infrastructure Compute VM** diegimui parengti `compose.yaml`, du Dockerfile ir Caddy konfigūracija. Caddy pateikia React failus ir persiunčia `/api` į Go. API ir duomenų bazė yra tik vidiniame Docker tinkle. Tai parengta architektūra; viešas diegimas dar neatliktas.
+Kliento pusė kreipiasi į Go API per HTTPS ir REST/JSON. API per GORM pasiekia MariaDB. **Oracle Cloud Infrastructure Compute VM** konteinerius valdo Docker Compose. Caddy pateikia React failus ir persiunčia `/api` užklausas į Go. API ir duomenų bazė yra tik vidiniame Docker tinkle. Viešas HTTPS prievadas `5000` nukreipiamas į Caddy prievadą `443`.
 
 ## Paleidimas vietoje
 
@@ -110,11 +110,11 @@ Atnaujintos mokymosi aplinkos, simuliatoriaus, skaičiavimų ir testavimo apraš
 
 ## Diegimas Oracle VM
 
-VM turi turėti Docker Compose, viešą IP, į domeną nukreiptą DNS įrašą ir atvertus 80/443 prievadus. Sukurkite `.env` pagal `.env.example`, įrašykite realų domeną, unikalius duomenų bazės slaptažodžius ir bent 32 simbolių `JWT_SECRET`, tada vykdykite `docker compose up -d --build`. Tikrinti galima `https://<domenas>/api/health`. Be VM ir domeno projektas dar nėra viešai pasiekiamas.
+Sukurkite `.env` pagal `.env.example` ir nustatykite `SITE_ADDRESS` (tik domenas, be schemos ar prievado), unikalius duomenų bazės slaptažodžius ir atsitiktinį bent 32 simbolių `JWT_SECRET`. Standartiniam HTTPS prievadui naudokite `docker compose up -d --build`. Dabartiniam Oracle prievadų išdėstymui naudokite `docker compose -p pokerlearn -f compose.yaml -f compose.oracle.yaml up -d --build`. Žr. [diegimo instrukcijas ir patikras](docs/DEPLOYMENT_CHECKLIST.md). API būseną galima tikrinti per [health endpointą](https://pokerlearn.144-24-247-126.sslip.io:5000/api/health).
 
 ## Patikra ir ataskaita
 
-`cd backend; go test ./...` tikrina Go kodą ir OpenAPI sintaksę. `cd frontend; npm run build` patikrina TypeScript ir surenka sąsają. Postman rinkinyje yra 15 metodų, hierarchiniai keliai ir klaidų atvejai. Ataskaita: `outputs/LAB0_PokerLearn_ataskaita.docx`.
+`cd backend; go test ./...` tikrina Go kodą ir OpenAPI sintaksę. `cd frontend; npm run build` patikrina TypeScript ir surenka sąsają. Postman rinkinyje yra 15 CRUD ir sąrašo metodų, hierarchiniai keliai ir klaidų atvejai. [Projekto ataskaita](docs/PokerLearn_ataskaita.docx).
 
 ## Projekto užduoties vieta ir derinimas
 

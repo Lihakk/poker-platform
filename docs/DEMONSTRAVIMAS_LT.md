@@ -2,7 +2,7 @@
 
 ## Pasiruošimas
 
-Atidaryk `http://127.0.0.1:5173`. Go API pasiekiamas `http://127.0.0.1:8080`. Tai vietinis paleidimas, o ne viešas debesijos diegimas.
+Atidaryk [viešą PokerLearn svetainę](https://pokerlearn.144-24-247-126.sslip.io:5000). React sąsaja ir `/api` pasiekiami tuo pačiu HTTPS adresu. Vietiniam darbui naudok `http://127.0.0.1:5173`, o tiesioginėms API užklausoms `http://127.0.0.1:8080`.
 
 CRUD demonstravimui naudok redaktoriaus arba administratoriaus paskyrą. Nauja registracija suteikia tik `learner` rolę. Neturint administratoriaus, pirmiausia registruojama paskyra, jos el. paštas laikinai nustatomas `ADMIN_EMAIL` aplinkos kintamajame ir perkraunamas backend. Po suteikimo bootstrap reikšmę pašalink. Nenaudok tikrų kitų žmonių paskyrų demonstravimui.
 
@@ -108,4 +108,4 @@ Kode: [routes.go](../backend/controllers/routes.go) registruoja visus 30 metodų
 
 „Sistemoje yra trys hierarchiškai susieti objektai: modulis, testas ir klausimas. Kiekvienam įgyvendinti CRUD ir sąrašo gavimas. API naudoja HTTP metodus, JSON, puslapiavimą ir nuorodas į resursus. Autentifikacijai naudojamas pasirašytas trumpalaikis JWT, o patogiam prisijungimo išlaikymui - rotuojamas refresh žetonas. Autorizacija tikrina ir rolę, ir įrašo savininką, todėl vienas redaktorius negali keisti kito turinio.“
 
-Neteik kaip įgyvendintų funkcijų viešo debesijos diegimo, 2FA, HTTP atsakymų kešavimo ar pažangos sinchronizavimo tarp įrenginių: šios dalys šioje versijoje nepatvirtintos arba neįgyvendintos.
+Diegimą parodyk atidaręs viešą svetainę ir [API būsenos endpointą](https://pokerlearn.144-24-247-126.sslip.io:5000/api/health). Teorija, prievadai ir papildomos diegimo patikros aprašytos [diegimo dokumentacijoje](DEPLOYMENT_CHECKLIST.md). 2FA, HTTP atsakymų kešavimas ir pažangos sinchronizavimas tarp įrenginių nėra šios demonstracijos dalis.

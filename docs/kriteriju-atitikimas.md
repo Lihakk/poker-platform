@@ -1,6 +1,6 @@
 # PokerLearn atitikimas kriterijams
 
-Atnaujinta 2026-11-13 pagal Kriterijai (1).pdf. Tai vietinio įgyvendinimo ir patikrų suvestinė, o ne pažado dėl dėstytojo skiriamo balo ar viešo diegimo įrodymas. Kodas ir dokumentacija įkelti į GitHub; tai nėra veikiančios svetainės talpinimas debesijoje.
+Atnaujinta 2026-11-20 pagal Kriterijai (1).pdf. Tai įgyvendinimo ir atliktų patikrų suvestinė, o ne garantija dėl dėstytojo skiriamo balo. GitHub saugomas kodas ir dokumentacija, o veikianti programa talpinama Oracle Cloud VM.
 
 | Kriterijus | Būsena ir įrodymas |
 |---|---|
@@ -17,12 +17,12 @@ Atnaujinta 2026-11-13 pagal Kriterijai (1).pdf. Tai vietinio įgyvendinimo ir pa
 | 4 įvesties tipai, ikonos, paveikslai, header/footer, modalai | Įgyvendinta. shadcn/ui Button/Input/Dialog/Tabs/Slider/Switch/Tooltip; Lucide SVG. |
 | Vientisas CSS, nestandartiniai šriftai, animacijos ir grįžtamasis ryšys | Įgyvendinta: vietiniai Inter / Newsreader, būsenų pranešimai, CSS animacijos ir reduced-motion. |
 | Responsive ir mobilus meniu | Patikrinta 60 puslapio/pločio derinių ir papildomai 20 stalo derinių; 320/390/768/1440px; be horizontalaus slinkimo ir vietų persidengimo. |
-| UML diegimo diagrama | Parengta numatomam Oracle VM diegimui; `docs/deployment-diagram.svg`. Tai ne PlantUML ir ne faktinio diegimo patvirtinimas. |
+| UML diegimo diagrama | [Diagrama](deployment-diagram.svg) rodo dabartinę Oracle VM architektūrą ir viešą HTTPS prievadą. Tai SVG, ne PlantUML šaltinis. |
 | 3 wireframe ir ekrano vaizdai | Parengta ir atnaujinta: `docs/wireframes.html`, `docs/screenshots/`. |
 | OpenAPI su schemomis, pavyzdžiais ir atsakymų kodais | Apima visus 30 realizuotų API metodų; Go testas tikrina maršrutų aprėptį. |
 | Ataskaitos struktūra ir numeruotos išvados | Atnaujintas DOCX su tiksliais ribojimais ir naujais ekranais. Tituliniam puslapiui dar reikia studento duomenų; dėstytojo laukas paliktas tuščias. |
-| Viešai pasiekiamas frontend ir backend | NEPATVIRTINTA: reikalinga VM prieiga, domenas, realus HTTPS diegimas ir priėmimo patikros. Žr. `DEPLOYMENT_CHECKLIST.md`. |
-| Kodo / ataskaitos pateikimas GitHub ar Moodle | Įkelta į [GitHub saugyklos main šaką](https://github.com/Lihakk/poker-platform) 2026-11-13; programos versijos commit `b84f088`. Ataskaita yra `docs/PokerLearn_ataskaita.docx`. Titulinio duomenis dar reikia užpildyti; Moodle pateikimą, jei jo prašo dėstytojas, atlieka studentas. |
-| Temos ir objektų suderinimas su dėstytoju | Studento patvirtinamas organizacinis veiksmas; programos testai to neįrodo. |
+| Viešai pasiekiamas frontend ir backend | [Svetainė](https://pokerlearn.144-24-247-126.sslip.io:5000) ir [API](https://pokerlearn.144-24-247-126.sslip.io:5000/api/health) pasiekiami per HTTPS. Prisijungimo, prieigos ir DB užklausų patikros aprašytos [diegimo dokumentacijoje](DEPLOYMENT_CHECKLIST.md). |
+| Kodo / ataskaitos pateikimas GitHub ar Moodle | Kodas ir [ataskaita](PokerLearn_ataskaita.docx) įkelti į [GitHub saugyklos main šaką](https://github.com/Lihakk/poker-platform). Titulinio duomenis dar reikia užpildyti; Moodle pateikimą, jei jo prašo dėstytojas, atlieka studentas. |
+| Temos ir objektų suderinimas su dėstytoju | Studentas patvirtino, kad tema suderinta. |
 
 Patikrų pakartojimas aprašytas `API_TESTING.md` ir `TRAINING_ENGINE.md`. GUI testai naudoja fiksuotus API atsakymus, o tikri serverio / DB veiksmai tikrinami atskirai. Naujas produkcinis Lighthouse balas nematuotas. Asmeninė pažanga lieka naršyklėje, o AI rekomendacijos yra mokomosios prielaidos, ne GTO sprendimas.

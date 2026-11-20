@@ -7,7 +7,7 @@
   </style>
   <rect width="1200" height="720" fill="white"/>
   <text x="600" y="45" text-anchor="middle" class="title">PokerLearn diegimo diagrama</text>
-  <text x="600" y="71" text-anchor="middle" class="small">Numatomas diegimas Oracle Cloud Compute VM</text>
+  <text x="600" y="71" text-anchor="middle" class="small">Diegimas Oracle Cloud Compute VM per Docker Compose</text>
 
   <rect x="40" y="260" width="220" height="210" class="node"/>
   <path d="M40 260 L50 250 H270 L260 260 Z M260 260 L270 250 V460 L260 470 Z" fill="#e2e8f0" stroke="#334155" stroke-width="2"/>
@@ -52,7 +52,7 @@
   <text x="968" y="449" class="small">duomenų schema</text>
 
   <path d="M260 365 L405 365" class="path"/>
-  <text x="332" y="350" text-anchor="middle" class="small">HTTPS :443</text>
+  <text x="332" y="350" text-anchor="middle" class="small">HTTPS :5000</text>
   <path d="M605 365 L665 365" class="path"/>
   <text x="635" y="205" text-anchor="middle" class="small">HTTP :8080</text>
   <path d="M875 365 L935 365" class="path"/>

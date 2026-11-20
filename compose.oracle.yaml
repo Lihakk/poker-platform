@@ -1,0 +1,9 @@
+services:
+  web:
+    build:
+      context: ./frontend
+      args:
+        CADDY_CONFIG: Caddyfile.oracle
+    ports: !override
+      - "80:80"
+      - "5000:443"

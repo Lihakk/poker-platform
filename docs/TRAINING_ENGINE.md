@@ -32,7 +32,7 @@ Equity calculations and AI turns run in a Web Worker. Pages are lazy-loaded; lig
 
 ## Verification
 
-UI primitives, self-hosted fonts and the responsive arena are described in `DESIGN_SYSTEM.md`. Complete API/Newman instructions are in `API_TESTING.md`. The updated report is `docs/PokerLearn_ataskaita.docx`; public deployment remains an external acceptance task.
+UI primitives, self-hosted fonts and the responsive arena are described in `DESIGN_SYSTEM.md`. Complete API/Newman instructions are in `API_TESTING.md`. See the [report](PokerLearn_ataskaita.docx) and [Oracle Cloud deployment details](DEPLOYMENT_CHECKLIST.md).
 
 ```powershell
 cd frontend
